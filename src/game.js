@@ -28,7 +28,8 @@
     2: { hlib: 6, titova: 4, kopylov: 0, kopylova: 0, ksan: 4, snow: 0.9 },
     3: { hlib: 8, titova: 6, kopylov: 5, kopylova: 5, ksan: 6, snow: 1.2 },
     4: { hlib: 10, titova: 8, kopylov: 8, kopylova: 8, ksan: 8, snow: 1.5 },
-    5: { hlib: 13, titova: 11, kopylov: 11, kopylova: 11, ksan: 11, snow: 2.4 }
+    5: { hlib: 13, titova: 11, kopylov: 11, kopylova: 11, ksan: 11, snow: 2.4 },
+    6: { hlib: 16, titova: 15, kopylov: 15, kopylova: 15, ksan: 15, snow: 3.2 }
   };
 
   /* ---------- голоси ----------
@@ -204,7 +205,7 @@
 
     hideAll();
     elHud.classList.remove('hidden');
-    elNight.textContent = 'Ніч ' + n;
+    elNight.textContent = n === 7 ? 'Кастомна ніч' : 'Ніч ' + n;
     setCam(0);
     G.phase = 'play';
     S.startAmbience();
@@ -213,7 +214,11 @@
   }
 
   /* ---------- ШІ ---------- */
-  function agg(key) { return (AGGRO[G.night] || AGGRO[5])[key] || 0; }
+  var CUSTOM = { hlib: 10, titova: 10, kopylov: 10, kopylova: 10, ksan: 10, snow: 2 };
+  function agg(key) {
+    if (G.night === 7) return CUSTOM[key] || 0;      // 7 = кастомна ніч
+    return (AGGRO[G.night] || AGGRO[6])[key] || 0;
+  }
 
   function defenseOK(ch) {
     var d = ch.def.defense;
@@ -588,11 +593,23 @@
     elHud.classList.add('hidden');
     var done = JSON.parse(localStorage.getItem('n6') || '[]');
     if (done.indexOf(G.night) < 0) { done.push(G.night); localStorage.setItem('n6', JSON.stringify(done)); }
-    $('win-title').textContent = G.night >= 5 ? 'ЗМІНУ ЗАКРИТО' : 'НІЧ ' + G.night + ' ПРОЙДЕНО';
-    $('win-text').textContent = G.night >= 5
-      ? 'П\'ять ночей. Ти єдиний охоронець шостої школи, який дожив до вересня.\nЗарплату переказали. Сніговик досі у дворі.'
-      : 'Прибиральниця відчиняє двері. Вона питає, чому ти сидиш під столом.\nТи не відповідаєш.';
-    $('btn-next').textContent = G.night >= 5 ? 'У МЕНЮ' : 'НАСТУПНА НІЧ';
+    if (G.night === 7) {
+      $('win-title').textContent = 'КАСТОМНУ НІЧ ЗАКРИТО';
+      $('win-text').textContent = 'Ти сам виставив їм цифри — і все одно дожив до шостої.\nЦе вже не робота. Це принцип.';
+      $('btn-next').textContent = 'У МЕНЮ';
+    } else if (G.night === 6) {
+      $('win-title').textContent = 'ПОЗАПЛАНОВУ ЗМІНУ ЗАКРИТО';
+      $('win-text').textContent = 'О 6:00 будильник не дзвонить — його нікому було ставити.\nТи просто встаєш і йдеш.\n\nВідкрито кастомну ніч.';
+      $('btn-next').textContent = 'У МЕНЮ';
+    } else if (G.night === 5) {
+      $('win-title').textContent = 'ЗМІНУ ЗАКРИТО';
+      $('win-text').textContent = 'П\'ять ночей. Ти єдиний охоронець шостої школи, який дожив до вересня.\nЗарплату переказали. Сніговик досі у дворі.\n\nВідкрито шосту ніч.';
+      $('btn-next').textContent = 'НІЧ 6';
+    } else {
+      $('win-title').textContent = 'НІЧ ' + G.night + ' ПРОЙДЕНО';
+      $('win-text').textContent = 'Прибиральниця відчиняє двері. Вона питає, чому ти сидиш під столом.\nТи не відповідаєш.';
+      $('btn-next').textContent = 'НАСТУПНА НІЧ';
+    }
     $('win').classList.remove('hidden');
     setTimeout(function () { S.stopAmbience(); }, 3000);
   }
@@ -615,7 +632,7 @@
     showHint._t = setTimeout(function () { elHint.classList.remove('show'); }, 1400);
   }
   function hideAll() {
-    ['menu', 'howto', 'brief', 'gameover', 'win'].forEach(function (i) { $(i).classList.add('hidden'); });
+    ['menu', 'howto', 'brief', 'gameover', 'win', 'custom'].forEach(function (i) { $(i).classList.add('hidden'); });
     elCams.classList.add('hidden'); elQte.classList.add('hidden'); elPerk.classList.add('hidden');
   }
 
@@ -924,15 +941,57 @@
   function paintNights() {
     var done = JSON.parse(localStorage.getItem('n6') || '[]');
     var w = $('menu-nights'); w.innerHTML = '';
-    for (var i = 1; i <= 5; i++) {
+    for (var i = 1; i <= 6; i++) {
       var d = document.createElement('div');
       d.className = 'nb' + (done.indexOf(i) >= 0 ? ' done' : '');
       d.textContent = i; w.appendChild(d);
     }
     var next = 1; while (done.indexOf(next) >= 0 && next < 5) next++;
-    $('btn-cont').classList.toggle('hidden', done.length === 0);
+    var first5 = done.indexOf(1) >= 0 && done.indexOf(2) >= 0 && done.indexOf(3) >= 0 &&
+      done.indexOf(4) >= 0 && done.indexOf(5) >= 0;
+    $('btn-cont').classList.toggle('hidden', done.length === 0 || first5);
     $('btn-cont').textContent = 'ПРОДОВЖИТИ · НІЧ ' + next;
     $('btn-cont').dataset.night = next;
+    // 6-та ніч відкривається після п'яти пройдених, кастомна — після шостої
+    $('btn-n6').classList.toggle('hidden', !first5);
+    $('btn-custom').classList.toggle('hidden', done.indexOf(6) < 0);
+  }
+
+  /* ---------- кастомна ніч ---------- */
+  var CUST_NAMES = {
+    hlib: 'ГЛІБ', titova: 'ТІТОВА', kopylov: 'КОПИЛОВ',
+    kopylova: 'КОПИЛОВА', ksan: 'КСАН ПАВЛВНА', snow: 'СНІГОВИК'
+  };
+  function buildCustom() {
+    var box = $('cust-rows');
+    if (box.childElementCount) return;
+    Object.keys(CUST_NAMES).forEach(function (k) {
+      var row = document.createElement('div');
+      row.className = 'crow';
+      var max = k === 'snow' ? 5 : 20;
+      row.innerHTML = '<div class="cname">' + CUST_NAMES[k] + '</div>' +
+        '<input type="range" min="0" max="' + max + '" value="' + CUSTOM[k] + '" data-k="' + k + '">' +
+        '<div class="cval">' + CUSTOM[k] + '</div>';
+      var inp = row.querySelector('input'), val = row.querySelector('.cval');
+      inp.addEventListener('input', function () {
+        CUSTOM[k] = +inp.value;
+        val.textContent = inp.value;
+        row.classList.toggle('max', +inp.value >= max);
+        S.sfx.click();
+      });
+      row.classList.toggle('max', CUSTOM[k] >= max);
+      box.appendChild(row);
+    });
+    $('custom').querySelectorAll('.preset').forEach(function (b) {
+      b.addEventListener('click', function () {
+        var p = +b.dataset.p;
+        box.querySelectorAll('.crow').forEach(function (row) {
+          var inp = row.querySelector('input');
+          inp.value = Math.min(p, +inp.max);
+          inp.dispatchEvent(new Event('input'));
+        });
+      });
+    });
   }
 
   function goBrief(n) {
@@ -949,6 +1008,18 @@
     paintNights();
     $('btn-play').onclick = function () { S.init(); goBrief(1); };
     $('btn-cont').onclick = function () { S.init(); goBrief(+$('btn-cont').dataset.night || 1); };
+    $('btn-n6').onclick = function () { S.init(); goBrief(6); };
+    $('btn-custom').onclick = function () {
+      S.init(); buildCustom();
+      $('menu').classList.add('hidden'); $('custom').classList.remove('hidden');
+    };
+    $('btn-cust-go').onclick = function () {
+      $('custom').classList.add('hidden');
+      S.shutUp(); startNight(7);
+    };
+    $('btn-cust-back').onclick = function () {
+      $('custom').classList.add('hidden'); $('menu').classList.remove('hidden');
+    };
     $('btn-how').onclick = function () { $('menu').classList.add('hidden'); $('howto').classList.remove('hidden'); };
     $('btn-back').onclick = function () { $('howto').classList.add('hidden'); $('menu').classList.remove('hidden'); };
     $('btn-brief').onclick = function () { S.shutUp(); startNight(+$('btn-brief').dataset.night || 1); };
@@ -956,7 +1027,8 @@
     $('btn-menu').onclick = function () { S.shutUp(); S.stopAmbience(); hideAll(); paintNights(); $('menu').classList.remove('hidden'); };
     $('btn-next').onclick = function () {
       S.shutUp();
-      if (G.night >= 5) { S.stopAmbience(); hideAll(); paintNights(); $('menu').classList.remove('hidden'); }
+      if (G.night === 5) { goBrief(6); }
+      else if (G.night >= 6) { S.stopAmbience(); hideAll(); paintNights(); $('menu').classList.remove('hidden'); }
       else goBrief(G.night + 1);
     };
   }

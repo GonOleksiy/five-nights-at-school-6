@@ -79,6 +79,8 @@
     <div class="m-btns">
       <button id="btn-play">ПОЧАТИ ЗМІНУ</button>
       <button id="btn-cont" class="hidden">ПРОДОВЖИТИ</button>
+      <button id="btn-n6" class="hidden">НІЧ 6 · ПОЗАПЛАНОВА ЗМІНА</button>
+      <button id="btn-custom" class="hidden">КАСТОМНА НІЧ</button>
       <button id="btn-how">ЯК ГРАТИ</button>
     </div>
     <div id="menu-nights"></div>
@@ -107,6 +109,21 @@
       <li><b class="c-help">Костік і Назар</b> — свої. Знайди їх на камері й клікни.</li>
     </ul>
     <button id="btn-back">НАЗАД</button>
+  </div>
+</div>
+
+<div id="custom" class="screen hidden">
+  <div class="m-wrap cust">
+    <h2>КАСТОМНА НІЧ</h2>
+    <p class="cust-sub">Постав кожному агресію від 0 до 20. 20 — вони не зупиняються.</p>
+    <div id="cust-rows"></div>
+    <div class="cust-presets">
+      <button class="preset" data-p="0">ВСІМ 0</button>
+      <button class="preset" data-p="10">ВСІМ 10</button>
+      <button class="preset" data-p="20">ВСІМ 20</button>
+    </div>
+    <button id="btn-cust-go">ПОЧАТИ</button>
+    <button id="btn-cust-back">НАЗАД</button>
   </div>
 </div>
 

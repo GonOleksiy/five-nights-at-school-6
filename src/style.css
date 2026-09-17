@@ -184,3 +184,16 @@ body.camsup #power-box{bottom:auto;top:78px;left:26px}
   .btn span{font-size:10px;letter-spacing:1px}
   .cbtn{width:42px;font-size:13px}
 }
+
+/* ---------- кастомна ніч ---------- */
+.cust h2{font-size:30px;letter-spacing:6px}
+.cust-sub{font-family:var(--type);font-size:15px;opacity:.55;margin:10px 0 24px}
+#cust-rows{width:min(560px,92vw);margin:0 auto 22px}
+.crow{display:flex;align-items:center;gap:14px;margin-bottom:11px}
+.crow .cname{width:180px;text-align:right;font-size:14px;letter-spacing:3px}
+.crow input[type=range]{flex:1;accent-color:var(--blood);height:4px}
+.crow .cval{width:38px;text-align:left;font-size:19px;font-weight:700;color:var(--acid)}
+.crow.max .cval{color:var(--blood)}
+.cust-presets{display:flex;gap:8px;justify-content:center;margin-bottom:22px}
+.preset{font-size:12px;letter-spacing:2px;padding:8px 18px}
+.cust button{margin:0 5px}
