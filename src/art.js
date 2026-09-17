@@ -797,23 +797,42 @@
       browAngle: 0.14, browY: -0.03, mouthW: 0.30, smile: 0.02, pupil: 0.34,
       decor: function (g, m) {
         g.save();
+        // кишеня-кенгуру
         g.strokeStyle = 'rgba(0,0,0,.35)'; g.lineWidth = 3;
         g.beginPath();
         g.moveTo(m.cx - m.shW * 0.30, m.shY + m.tH * 0.62);
         g.quadraticCurveTo(m.cx, m.shY + m.tH * 0.68, m.cx + m.shW * 0.30, m.shY + m.tH * 0.62);
         g.stroke();
+        // капюшон за шиєю
         g.fillStyle = 'rgba(0,0,0,0.35)';
         g.beginPath();
         g.ellipse(m.cx, m.shY + m.tH * 0.03, m.shW * 0.40, m.tH * 0.10, 0, Math.PI, 0);
         g.fill();
-        g.strokeStyle = '#ddd8c8'; g.lineWidth = 3.5;
+        // МІТКА: яскраві шнурки — біла «вилка» на грудях, видно навіть у темряві
+        g.strokeStyle = '#f2eee0'; g.lineWidth = 5;
+        g.lineCap = 'round';
         [-1, 1].forEach(function (s2) {
           g.beginPath();
           g.moveTo(m.cx + s2 * m.shW * 0.09, m.shY + m.tH * 0.03);
-          g.quadraticCurveTo(m.cx + s2 * m.shW * 0.14, m.shY + m.tH * 0.16,
-            m.cx + s2 * m.shW * 0.11, m.shY + m.tH * 0.26);
+          g.quadraticCurveTo(m.cx + s2 * m.shW * 0.16, m.shY + m.tH * 0.20,
+            m.cx + s2 * m.shW * 0.12, m.shY + m.tH * 0.34);
           g.stroke();
+          g.fillStyle = '#d8d2c0';
+          g.beginPath();
+          g.arc(m.cx + s2 * m.shW * 0.12, m.shY + m.tH * 0.35, 5 * m.s, 0, 6.3);
+          g.fill();
         });
+        // МІТКА: лямка рюкзака навскіс — унікальний силует
+        g.strokeStyle = '#3b4a2e'; g.lineWidth = 16 * m.s;
+        g.beginPath();
+        g.moveTo(m.cx - m.shW * 0.34, m.shY + m.tH * 0.02);
+        g.lineTo(m.cx + m.shW * 0.26, m.shY + m.tH * 0.72);
+        g.stroke();
+        g.strokeStyle = 'rgba(255,245,220,0.35)'; g.lineWidth = 3;
+        g.beginPath();
+        g.moveTo(m.cx - m.shW * 0.34, m.shY + m.tH * 0.02);
+        g.lineTo(m.cx + m.shW * 0.26, m.shY + m.tH * 0.72);
+        g.stroke();
         g.restore();
       }
     },
@@ -962,13 +981,30 @@
       browAngle: 0.08, mouthW: 0.28, smile: 0.55, pupil: 0.42,
       decor: function (g, m) {
         g.save();
+        // принт на худі
         g.fillStyle = '#e6e2d4';
-        g.beginPath(); g.arc(m.cx - 14 * m.s, m.shY + m.tH * 0.34, 20 * m.s, 0, 6.3); g.fill();
+        g.beginPath(); g.arc(m.cx - 14 * m.s, m.shY + m.tH * 0.42, 20 * m.s, 0, 6.3); g.fill();
         g.fillStyle = '#191920';
-        g.beginPath(); g.arc(m.cx - 14 * m.s, m.shY + m.tH * 0.34, 13 * m.s, 0, 6.3); g.fill();
+        g.beginPath(); g.arc(m.cx - 14 * m.s, m.shY + m.tH * 0.42, 13 * m.s, 0, 6.3); g.fill();
         g.font = (17 * m.s) + 'px monospace'; g.fillStyle = '#e6e2d4';
-        g.fillText('1010', m.cx + 10 * m.s, m.shY + m.tH * 0.31);
-        g.fillText('0101', m.cx + 10 * m.s, m.shY + m.tH * 0.40);
+        g.fillText('1010', m.cx + 10 * m.s, m.shY + m.tH * 0.39);
+        g.fillText('0101', m.cx + 10 * m.s, m.shY + m.tH * 0.48);
+        // МІТКА: навушники на шиї — світлі дужки обабіч горла
+        g.strokeStyle = '#2a2a30'; g.lineWidth = 9 * m.s;
+        g.beginPath();
+        g.arc(m.cx, m.shY + m.tH * 0.03, m.shW * 0.30, Math.PI * 1.08, Math.PI * 1.92);
+        g.stroke();
+        [-1, 1].forEach(function (s2) {
+          g.fillStyle = '#c9c4b4';
+          g.beginPath();
+          g.ellipse(m.cx + s2 * m.shW * 0.30, m.shY + m.tH * 0.07, 13 * m.s, 16 * m.s, 0, 0, 6.3);
+          g.fill();
+          g.strokeStyle = 'rgba(0,0,0,.5)'; g.lineWidth = 2; g.stroke();
+          g.fillStyle = '#6a6558';
+          g.beginPath();
+          g.ellipse(m.cx + s2 * m.shW * 0.30, m.shY + m.tH * 0.07, 6 * m.s, 8 * m.s, 0, 0, 6.3);
+          g.fill();
+        });
         g.restore();
       }
     },
