@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="utf-8">
+<title>Персонажі — 5 ночей у 6 школі</title>
+<style>
+  html,body{margin:0;height:100%;background:#101114;overflow:auto;font-family:sans-serif;color:#cfcabb}
+  #grid{display:flex;flex-wrap:wrap;gap:6px;padding:10px}
+  .cell{background:#1b1d22;border:1px solid #2c2f36;padding:4px;text-align:center}
+  .cell canvas{display:block;width:150px;height:300px;image-rendering:auto}
+  .cell b{font-size:11px;letter-spacing:1px;display:block;padding:3px 0;opacity:.75}
+  h2{font-size:13px;letter-spacing:4px;margin:14px 10px 2px;opacity:.5;width:100%}
+</style>
+</head>
+<body>
+<div id="grid"></div>
+<script src="vendor/three.min.js"></script>
+<script src="src/art.js"></script>
+<script>
+(function(){
+  var grid = document.getElementById('grid');
+  var chars = ['hlib','titova','kopylov','kopylova','ksan','kostik','nazar','snow'];
+  var poses = Art.POSE_KEYS.concat(['lunge']);
+
+  // смуга облич великим планом
+  var fh = document.createElement('h2'); fh.textContent = 'ОБЛИЧЧЯ (великим планом)';
+  grid.appendChild(fh);
+  chars.forEach(function(k){
+    if (k === 'snow') return;
+    var src = Art.make(k, 'stand').image;
+    var sp = Art.SPEC[k];
+    var bodyH = Art.H - 52 - 46;
+    var hr = bodyH * sp.headR;
+    var hy = 52 + hr * 1.10;
+    var sz = hr * 2.9;
+    var cell = document.createElement('div');
+    cell.className = 'cell';
+    var c = document.createElement('canvas');
+    c.width = 220; c.height = 220;
+    c.style.width = '220px'; c.style.height = '220px';
+    var g = c.getContext('2d');
+    g.fillStyle = '#23252b'; g.fillRect(0,0,220,220);
+    g.drawImage(src, Art.W/2 - sz/2, hy - sz*0.52, sz, sz, 0, 0, 220, 220);
+    cell.appendChild(c);
+    var b = document.createElement('b'); b.textContent = k;
+    cell.appendChild(b);
+    grid.appendChild(cell);
+  });
+
+  chars.forEach(function(k){
+    var h = document.createElement('h2');
+    h.textContent = k.toUpperCase() + '  ·  ' + Art.height(k).toFixed(2) + ' м';
+    grid.appendChild(h);
+    (k === 'snow' ? ['stand'] : poses).forEach(function(p){
+      var tex = Art.make(k, p);
+      var src = tex.image;
+      var cell = document.createElement('div');
+      cell.className = 'cell';
+      var c = document.createElement('canvas');
+      c.width = src.width; c.height = src.height;
+      var g = c.getContext('2d');
+      g.fillStyle = '#23252b'; g.fillRect(0,0,c.width,c.height);
+      g.drawImage(src, 0, 0);
+      cell.appendChild(c);
+      var b = document.createElement('b'); b.textContent = p;
+      cell.appendChild(b);
+      grid.appendChild(cell);
+    });
+  });
+})();
+</script>
+</body>
+</html>
