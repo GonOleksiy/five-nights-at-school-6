@@ -94,7 +94,11 @@
   };
 
   /* ---------- three ---------- */
-  var renderer, scene, camera, camCam, rt, world, flashlight, shutters = {}, shakeSeed = 0;
+  var renderer, scene, camera, camCam, rt, world, flashlight, ambient, shutters = {}, shakeSeed = 0;
+  /* Камери — нічного бачення: у темряві вони бачать те, чого не бачить око.
+     Це і робить планшет вартим свого заряду, і пояснює, чому Столову
+     видно тільки на CAM 05. */
+  var AMB_DARK = 0.085, AMB_CAM = 0.62;
   var PIX = 0.58;
 
   function initGL() {
@@ -106,7 +110,8 @@
 
     scene = new T.Scene();
     scene.fog = new T.FogExp2(0x04050a, 0.082);
-    scene.add(new T.AmbientLight(0x1b2130, 0.085));
+    ambient = new T.AmbientLight(0x1b2130, AMB_DARK);
+    scene.add(ambient);
     var moon = new T.DirectionalLight(0x93a8c8, 0.085);
     moon.position.set(-6, 12, -20); scene.add(moon);
 
@@ -943,6 +948,11 @@
       camera.rotation.x = G.pitch + (G.stance === 'hide' ? -0.1 : 0);
       var br = G.phase === 'play' ? 0.004 : 0;
       camera.position.y += Math.sin(G.t * 1.6) * br;
+    }
+
+    if (ambient) {
+      var wantAmb = G.camsUp ? AMB_CAM : AMB_DARK;
+      ambient.intensity += (wantAmb - ambient.intensity) * Math.min(1, dt * 9);
     }
 
     flashlight.intensity += ((G.flash && G.power > 0 && !G.camsUp ? 3.3 : 0) - flashlight.intensity) * Math.min(1, dt * 10);
