@@ -119,14 +119,16 @@
     world = W.build(scene);
 
     // ліхтар
-    flashlight = new T.SpotLight(0xffeec4, 0, 34, 0.36, 0.42, 1.15);
+    flashlight = new T.SpotLight(0xffeec4, 0, 34, 0.47, 0.58, 1.10);
     flashlight.castShadow = true;
     flashlight.shadow.mapSize.set(1024, 1024);
     flashlight.shadow.camera.near = 0.3;
     flashlight.shadow.camera.far = 30;
+    // джерело виносимо вперед за прилавок, інакше конус б'є у власну стільницю
+    flashlight.position.set(0, -0.06, -0.85);
     camera.add(flashlight);
     camera.add(flashlight.target);
-    flashlight.target.position.set(0, 0, -1);
+    flashlight.target.position.set(0, -0.10, -6);
     scene.add(camera);
 
     // монітори показують активну камеру
@@ -330,7 +332,7 @@
 
   /* вивести персонажа на маршрут */
   function launch(ch) {
-    ch.spawn(ch.lane);
+    ch.spawn();
     ch.wait = stepTime(ch);
     ch.blocked = 0;
   }
@@ -943,7 +945,12 @@
       camera.position.y += Math.sin(G.t * 1.6) * br;
     }
 
-    flashlight.intensity += ((G.flash && G.power > 0 && !G.camsUp ? 4.6 : 0) - flashlight.intensity) * Math.min(1, dt * 10);
+    flashlight.intensity += ((G.flash && G.power > 0 && !G.camsUp ? 3.3 : 0) - flashlight.intensity) * Math.min(1, dt * 10);
+    // ліхтар у руці — ледь помітно «дихає», інакше пляма мертва
+    if (flashlight.intensity > 0.05) {
+      flashlight.target.position.x = Math.sin(G.t * 0.7) * 0.10 + Math.sin(G.t * 2.3) * 0.03;
+      flashlight.target.position.y = -0.10 + Math.cos(G.t * 0.9) * 0.08;
+    }
 
     // помічників видно навіть у темряві — вони «свої»
     G.helpers.forEach(function (h) {

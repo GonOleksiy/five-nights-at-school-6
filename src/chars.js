@@ -131,10 +131,15 @@
     this.node = null;
   };
 
+  /* routeKey — назва маршруту (не ряд!). Ряд береться з this.lane,
+     який виставляє game.js при створенні персонажа. */
   Char.prototype.spawn = function (routeKey) {
-    this.route = ROUTE[routeKey || this.def.routes[Math.floor(Math.random() * this.def.routes.length)]];
+    var key = (typeof routeKey === 'string' && ROUTE[routeKey])
+      ? routeKey
+      : this.def.routes[Math.floor(Math.random() * this.def.routes.length)];
+    this.route = ROUTE[key];
     this.idx = 0; this.state = 'stalk';
-    this.snapTo(this.route[0]);
+    this.snapTo(this.route[0], this.lane);
   };
 
   Char.prototype.applyPose = function (name) {
