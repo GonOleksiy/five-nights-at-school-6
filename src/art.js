@@ -242,8 +242,8 @@
       var ew = r * 0.205, eh = r * 0.120;
 
       var og = g.createRadialGradient(ex, ey - r * 0.04, r * 0.02, ex, ey, r * 0.34);
-      og.addColorStop(0, 'rgba(12,6,8,0.72)');
-      og.addColorStop(0.55, 'rgba(14,8,10,0.34)');
+      og.addColorStop(0, 'rgba(10,5,7,0.88)');
+      og.addColorStop(0.55, 'rgba(12,7,9,0.48)');
       og.addColorStop(1, 'rgba(14,8,10,0)');
       g.fillStyle = og;
       g.beginPath(); g.ellipse(ex, ey - r * 0.02, r * 0.34, r * 0.30, 0, 0, 6.3); g.fill();
@@ -264,7 +264,7 @@
       g.fillStyle = yg; g.fillRect(ex - ew, ey - eh * 2, ew * 2, eh * 4);
 
       var px = ex + (o.gaze || 0) * r * 0.07;
-      var ir = r * 0.105;
+      var ir = r * 0.097;
       g.fillStyle = o.eye || '#4a5a3a';
       g.beginPath(); g.arc(px, ey, ir, 0, 6.3); g.fill();
       g.strokeStyle = 'rgba(0,0,0,0.30)'; g.lineWidth = 1;
@@ -794,7 +794,7 @@
       h: 1.80, headR: 0.071, torso: 0.245, shoulder: 0.168, hip: 0.140, arm: 0.51, handS: 1.25,
       cloth: '#8a8a82', pant: '#2a2c36',
       skin: '#c2a086', hairCol: '#3a2a1a', hairType: 'bowl', eye: '#4a3626', brow: '#3a2a1a',
-      browAngle: 0.04, mouthW: 0.30, smile: 0.10, pupil: 0.40,
+      browAngle: 0.14, browY: -0.03, mouthW: 0.30, smile: 0.02, pupil: 0.34,
       decor: function (g, m) {
         g.save();
         g.strokeStyle = 'rgba(0,0,0,.35)'; g.lineWidth = 3;
