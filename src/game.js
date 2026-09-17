@@ -90,7 +90,7 @@
     perkReveal: 0, perkImmune: 0, cheat: false,
     yaw: 0, pitch: 0,
     shake: 0, killer: null,
-    ambT: 8, heartOn: false, threat: 0, jumpT: 0, allCards: [], ambStopT: null
+    ambT: 8, heartOn: false, threat: 0, jumpT: 0, allCards: [], ambStopT: null, overT: null
   };
 
   /* ---------- three ---------- */
@@ -214,6 +214,7 @@
   /* ---------- ніч ---------- */
   function startNight(n) {
     if (G.ambStopT) { clearTimeout(G.ambStopT); G.ambStopT = null; }
+    if (G.overT) { clearTimeout(G.overT); G.overT = null; }
     S.stopAmbience();                 // гарантовано з нуля, інакше стара ніч глушить нову
     G.night = n; G.t = 0; G.clock = 0; G.power = 100;
     G.stance = 'sit'; G.stanceT = 1; G.flash = false;
@@ -640,11 +641,17 @@
     elRed.style.opacity = 0.9;
 
     G.jumpT = 0;
-    setTimeout(function () {
+    // беремо вбивцю в замикання: якщо ніч перезапустять раніше ніж за 2.3 с,
+    // G.killer уже буде null, і таймер падав
+    var killer = G.killer;
+    if (G.overT) clearTimeout(G.overT);
+    G.overT = setTimeout(function () {
+      G.overT = null;
       elRed.style.opacity = 0;
       m.userData.frozen = false;
-      $('over-title').textContent = G.killer.name + (G.killer.fem ? ' ЗНАЙШЛА ТЕБЕ' : ' ЗНАЙШОВ ТЕБЕ');
-      $('over-story').textContent = G.killer.story;
+      if (G.phase !== 'dead') return;           // встигли перезапустити — нічого не показуємо
+      $('over-title').textContent = killer.name + (killer.fem ? ' ЗНАЙШЛА ТЕБЕ' : ' ЗНАЙШОВ ТЕБЕ');
+      $('over-story').textContent = killer.story;
       $('gameover').classList.remove('hidden');
       S.stopAmbience();
     }, 2300);
@@ -966,6 +973,31 @@
     camera.position.x += (SEAT.x - camera.position.x) * Math.min(1, dt * 8);
     camera.position.z += (SEAT.z - camera.position.z) * Math.min(1, dt * 8);
     camera.position.y += (targetY - camera.position.y) * Math.min(1, dt * 6);
+
+    /* У меню камера стоїть у темному коридорі й дивиться на освітлену
+       вахту — єдине світле місце в порожній школі. Повільний дрейф. */
+    if (G.phase === 'menu') {
+      var mt = G.t * 0.085;
+      var mx = Math.sin(mt) * 6.2;
+      camera.position.set(mx, 1.62 + Math.sin(mt * 1.6) * 0.12, -8.15);
+      // дивимось на нішу охорони
+      var dx = 0 - mx, dz = -6.45 - (-8.15);
+      camera.rotation.set(
+        -0.06 + Math.sin(mt * 1.1) * 0.015,
+        Math.atan2(-dx, -dz) + Math.sin(mt * 0.7) * 0.06,
+        Math.sin(mt * 0.5) * 0.012
+      );
+      if (ambient) ambient.intensity += (0.30 - ambient.intensity) * Math.min(1, dt * 2);
+      flashlight.intensity += (0 - flashlight.intensity) * Math.min(1, dt * 4);
+      world.lights.forEach(function (l) {
+        var v = l.baseOn ? 1.05 : 0.14;
+        l.light.intensity += (v - l.light.intensity) * Math.min(1, dt * 2);
+      });
+      world.deskLight.intensity = 1.6;
+      renderer.setRenderTarget(null);
+      renderer.render(scene, camera);
+      return;
+    }
 
     if (G.phase === 'dead') {
       G.shake = Math.max(0, G.shake - dt * 0.7);

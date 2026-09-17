@@ -204,3 +204,14 @@ body.camsup #power-box{bottom:auto;top:78px;left:26px}
   #subtitle{bottom:150px;font-size:17px}
   body.camsup #power-box{top:64px}
 }
+
+/* меню напівпрозоре — за ним повільно пливе коридор школи */
+#menu{
+  background:
+    radial-gradient(ellipse at center, rgba(6,6,8,.30) 0%, rgba(4,4,6,.86) 82%),
+    linear-gradient(rgba(6,6,8,.20), rgba(4,4,6,.72));
+}
+#menu h1{text-shadow:0 6px 40px #000,0 0 16px #000}
+#menu .sub,#menu .tiny{text-shadow:0 2px 12px #000}
+#menu button{background:rgba(8,8,10,.55);backdrop-filter:blur(2px)}
+#menu button:hover{background:var(--bone);color:#0a0a0c}
