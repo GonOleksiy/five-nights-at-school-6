@@ -29,30 +29,158 @@
     };
   }
 
+  /* дрібне зерно поверх будь-якої текстури */
+  function speckle(g, w, h, n, cols, aMin, aMax, rMax) {
+    for (var i = 0; i < n; i++) {
+      g.globalAlpha = aMin + Math.random() * (aMax - aMin);
+      g.fillStyle = cols[(Math.random() * cols.length) | 0];
+      g.beginPath();
+      g.ellipse(Math.random() * w, Math.random() * h,
+        0.5 + Math.random() * rMax, 0.5 + Math.random() * rMax, Math.random() * 3, 0, 6.3);
+      g.fill();
+    }
+    g.globalAlpha = 1;
+  }
+
+  /* тріщини / патьоки */
+  function cracks(g, w, h, n, col, len) {
+    g.strokeStyle = col;
+    for (var i = 0; i < n; i++) {
+      var x = Math.random() * w, y = Math.random() * h;
+      g.globalAlpha = 0.10 + Math.random() * 0.25;
+      g.lineWidth = 0.5 + Math.random() * 1.2;
+      g.beginPath(); g.moveTo(x, y);
+      for (var k = 0; k < 5; k++) {
+        x += (Math.random() - 0.5) * len; y += (Math.random() - 0.2) * len;
+        g.lineTo(x, y);
+      }
+      g.stroke();
+    }
+    g.globalAlpha = 1;
+  }
+
   var TEX = {};
   function initTex() {
-    TEX.wallLow = tex(128, 128, grime('#4e5b4a', 260, '#2b332a'), [6, 2]);     // шкільна панель
-    TEX.wallUp = tex(128, 128, grime('#b3aa96', 240, '#7d7566'), [6, 2]);
-    TEX.floor = tex(128, 128, function (g, w, h) {
-      grime('#5c4036', 200, '#3a2620')(g, w, h);
-      g.strokeStyle = 'rgba(0,0,0,.25)'; g.lineWidth = 1;
-      for (var y = 0; y < h; y += 16) { g.beginPath(); g.moveTo(0, y); g.lineTo(w, y); g.stroke(); }
-      for (var x = 0; x < w; x += 32) { g.beginPath(); g.moveTo(x, 0); g.lineTo(x, h); g.stroke(); }
-    }, [14, 9]);
-    TEX.ceil = tex(64, 64, grime('#57534c', 120, '#33302b'), [10, 7]);
-    TEX.wood = tex(128, 128, function (g, w, h) {
-      g.fillStyle = '#c9a46e'; g.fillRect(0, 0, w, h);
-      for (var i = 0; i < 70; i++) {
-        g.globalAlpha = .05 + Math.random() * .12;
-        g.strokeStyle = Math.random() < .5 ? '#8d6438' : '#e0c496';
-        g.lineWidth = .5 + Math.random() * 2;
-        var y = Math.random() * h;
-        g.beginPath(); g.moveTo(0, y);
-        g.bezierCurveTo(w * .3, y + (Math.random() - .5) * 7, w * .6, y + (Math.random() - .5) * 7, w, y);
+    /* --- панель, пофарбована олійною фарбою (шкільний «низ») --- */
+    TEX.wallLow = tex(256, 256, function (g, w, h) {
+      g.fillStyle = '#46523f'; g.fillRect(0, 0, w, h);
+      speckle(g, w, h, 900, ['#3a4534', '#525f4a', '#2e382a'], 0.04, 0.16, 9);
+      for (var i = 0; i < 60; i++) {                       // патьоки валика
+        g.globalAlpha = 0.03 + Math.random() * 0.06;
+        g.fillStyle = Math.random() < .5 ? '#5d6b55' : '#333d2f';
+        g.fillRect(Math.random() * w, 0, 1 + Math.random() * 7, h);
+      }
+      g.globalAlpha = 1;
+      for (var k = 0; k < 26; k++) {                        // відколи до штукатурки
+        g.fillStyle = 'rgba(176,168,150,' + (0.25 + Math.random() * 0.4) + ')';
+        g.beginPath();
+        g.ellipse(Math.random() * w, Math.random() * h, 1 + Math.random() * 5, 1 + Math.random() * 4,
+          Math.random() * 3, 0, 6.3);
+        g.fill();
+      }
+      cracks(g, w, h, 10, '#242c20', 12);
+      var gr = g.createLinearGradient(0, 0, 0, h);          // блиск олійної фарби
+      gr.addColorStop(0, 'rgba(255,255,230,0.07)');
+      gr.addColorStop(0.5, 'rgba(0,0,0,0)');
+      gr.addColorStop(1, 'rgba(0,0,0,0.20)');
+      g.fillStyle = gr; g.fillRect(0, 0, w, h);
+    }, [8, 2]);
+
+    /* --- побілка (верх стіни) --- */
+    TEX.wallUp = tex(256, 256, function (g, w, h) {
+      g.fillStyle = '#b9b09b'; g.fillRect(0, 0, w, h);
+      speckle(g, w, h, 700, ['#a79e89', '#c9c1ad', '#8f8874'], 0.05, 0.18, 12);
+      for (var i = 0; i < 9; i++) {                         // патьоки вологи згори
+        var x = Math.random() * w;
+        var gg = g.createLinearGradient(x, 0, x, h * (0.3 + Math.random() * 0.5));
+        gg.addColorStop(0, 'rgba(120,108,86,0.30)');
+        gg.addColorStop(1, 'rgba(120,108,86,0)');
+        g.fillStyle = gg;
+        g.fillRect(x - 12, 0, 24 + Math.random() * 30, h);
+      }
+      cracks(g, w, h, 16, '#7a7260', 16);
+      for (var k = 0; k < 12; k++) {                        // осипалось
+        g.fillStyle = 'rgba(150,140,120,' + (0.15 + Math.random() * 0.25) + ')';
+        g.beginPath();
+        g.ellipse(Math.random() * w, Math.random() * h, 3 + Math.random() * 14, 2 + Math.random() * 10,
+          Math.random() * 3, 0, 6.3);
+        g.fill();
+      }
+    }, [8, 2]);
+
+    /* --- лінолеум у шашку, затертий --- */
+    TEX.floor = tex(256, 256, function (g, w, h) {
+      var cell = 64;
+      for (var yy = 0; yy < h; yy += cell) {
+        for (var xx = 0; xx < w; xx += cell) {
+          var odd = ((xx / cell) + (yy / cell)) % 2;
+          g.fillStyle = odd ? '#5a3f33' : '#6b4d3e';
+          g.fillRect(xx, yy, cell, cell);
+        }
+      }
+      speckle(g, w, h, 2600, ['#7d5c49', '#452f26', '#8a6a52', '#33221b'], 0.10, 0.35, 2.2);
+      g.strokeStyle = 'rgba(20,12,9,0.55)'; g.lineWidth = 2;
+      for (var s = 0; s <= w; s += cell) {                  // шви
+        g.beginPath(); g.moveTo(s, 0); g.lineTo(s, h); g.stroke();
+        g.beginPath(); g.moveTo(0, s); g.lineTo(w, s); g.stroke();
+      }
+      for (var i = 0; i < 40; i++) {                        // дуги від швабри
+        g.globalAlpha = 0.03 + Math.random() * 0.07;
+        g.strokeStyle = Math.random() < .5 ? '#a2846c' : '#2b1d16';
+        g.lineWidth = 2 + Math.random() * 10;
+        g.beginPath();
+        g.arc(Math.random() * w, Math.random() * h, 20 + Math.random() * 90,
+          Math.random() * 6.3, Math.random() * 6.3);
         g.stroke();
       }
       g.globalAlpha = 1;
-    }, [1, 1]);
+      cracks(g, w, h, 6, '#231710', 20);
+    }, [10, 7]);
+
+    /* --- стеля: плити з сіткою й плямами протікання --- */
+    TEX.ceil = tex(256, 256, function (g, w, h) {
+      g.fillStyle = '#5a564e'; g.fillRect(0, 0, w, h);
+      speckle(g, w, h, 900, ['#4c483f', '#67625a', '#403c35'], 0.06, 0.2, 7);
+      g.strokeStyle = 'rgba(28,26,22,0.6)'; g.lineWidth = 3;
+      for (var s = 0; s <= w; s += 128) {
+        g.beginPath(); g.moveTo(s, 0); g.lineTo(s, h); g.stroke();
+        g.beginPath(); g.moveTo(0, s); g.lineTo(w, s); g.stroke();
+      }
+      for (var i = 0; i < 5; i++) {
+        var x = Math.random() * w, y = Math.random() * h;
+        var gr2 = g.createRadialGradient(x, y, 2, x, y, 20 + Math.random() * 50);
+        gr2.addColorStop(0, 'rgba(120,96,50,0.35)');
+        gr2.addColorStop(1, 'rgba(120,96,50,0)');
+        g.fillStyle = gr2;
+        g.beginPath(); g.arc(x, y, 70, 0, 6.3); g.fill();
+      }
+    }, [12, 9]);
+
+    /* --- бук стола охорони --- */
+    TEX.wood = tex(256, 256, function (g, w, h) {
+      g.fillStyle = '#c2a070'; g.fillRect(0, 0, w, h);
+      for (var i = 0; i < 180; i++) {                       // волокна
+        g.globalAlpha = .04 + Math.random() * .13;
+        g.strokeStyle = Math.random() < .5 ? '#8a6336' : '#ddc196';
+        g.lineWidth = .4 + Math.random() * 2.4;
+        var y = Math.random() * h;
+        g.beginPath(); g.moveTo(0, y);
+        g.bezierCurveTo(w * .3, y + (Math.random() - .5) * 14,
+          w * .6, y + (Math.random() - .5) * 14, w, y + (Math.random() - .5) * 6);
+        g.stroke();
+      }
+      g.globalAlpha = 1;
+      for (var k = 0; k < 3; k++) {                         // сучки
+        var kx = Math.random() * w, ky = Math.random() * h;
+        for (var r2 = 14; r2 > 0; r2 -= 2.5) {
+          g.globalAlpha = 0.12;
+          g.strokeStyle = '#7a5730'; g.lineWidth = 1.4;
+          g.beginPath(); g.ellipse(kx, ky, r2, r2 * 0.62, 0.6, 0, 6.3); g.stroke();
+        }
+      }
+      g.globalAlpha = 1;
+      speckle(g, w, h, 300, ['#a8854f', '#e2caa2'], 0.03, 0.09, 3);
+    }, [2, 2]);
   }
 
   /* ---------- матеріали ---------- */
