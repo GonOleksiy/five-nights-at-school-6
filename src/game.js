@@ -223,6 +223,7 @@
     G.yaw = 0; G.pitch = 0; G.shake = 0; G.killer = null;
     G.perkReveal = 0; G.perkImmune = 0; G.cheat = false;
     G.ambT = 10 + Math.random() * 10;
+    tutorIdx = 0; tutorDoor = false;
 
     G.chars.forEach(function (c) { c.reset(true); c.cool *= paceMul(); });
     G.allCards.forEach(function (m) {
@@ -850,6 +851,38 @@
   ];
   var AMB_TOTAL = AMB.reduce(function (s, e) { return s + e[0]; }, 0);
 
+  /* ---------- навчання на першій ночі ----------
+     Друзі не читатимуть інструкцію. Перша ніч майже порожня саме тому,
+     що вона вчить: підказки виринають рівно тоді, коли дія стає потрібною. */
+  var TUTOR = [
+    [4, 'ТИ НА ВАХТІ. РОЗДИВИСЬ.'],
+    [12, 'V — ВСТАТИ Й ВИЗИРНУТИ'],
+    [24, 'F — ЛІХТАР. БЕЗ НЬОГО ТИ НІЧОГО НЕ ПОБАЧИШ'],
+    [40, 'TAB — КАМЕРИ. ВОНИ БАЧАТЬ У ТЕМРЯВІ'],
+    [62, 'SPACE — ПІД СТІЛ. ЗНАДОБИТЬСЯ ЗАВТРА'],
+    [90, 'СЛУХАЙ. ЙОГО ЧУТНО РАНІШЕ, НІЖ ВИДНО']
+  ];
+  var tutorIdx = 0, tutorDoor = false;
+
+  function tutorial() {
+    if (G.night !== 1) return;
+    while (tutorIdx < TUTOR.length && G.clock >= TUTOR[tutorIdx][0]) {
+      showHint(TUTOR[tutorIdx][1]);
+      tutorIdx++;
+    }
+    if (tutorDoor) return;
+    for (var i = 0; i < G.chars.length; i++) {
+      var c = G.chars[i];
+      if (c.state !== 'atDoor') continue;
+      tutorDoor = true;
+      var side = c.node === 'DOOR_L' ? 'Q — ЛІВА РОЛЕТА'
+        : c.node === 'DOOR_R' ? 'E — ПРАВА РОЛЕТА'
+          : 'R — ҐРАТИ ВЕНТЛАЗА';
+      showHint(side);
+      return;
+    }
+  }
+
   function ambientEvents(dt) {
     G.ambT -= dt;
     if (G.ambT > 0) return;
@@ -877,6 +910,7 @@
         trySpawnHelper(dt);
         updateSnow(dt);
         ambientEvents(dt);
+        tutorial();
 
         // час
         G.clock += dt;

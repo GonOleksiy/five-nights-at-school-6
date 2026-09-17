@@ -197,3 +197,10 @@ body.camsup #power-box{bottom:auto;top:78px;left:26px}
 .cust-presets{display:flex;gap:8px;justify-content:center;margin-bottom:22px}
 .preset{font-size:12px;letter-spacing:2px;padding:8px 18px}
 .cust button{margin:0 5px}
+
+/* на вузьких екранах індикатор заряду налазив на кнопки */
+@media (max-width:1000px){
+  #power-box{bottom:92px}
+  #subtitle{bottom:150px;font-size:17px}
+  body.camsup #power-box{top:64px}
+}
