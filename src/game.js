@@ -192,7 +192,10 @@
     G.ambT = 10 + Math.random() * 10;
 
     G.chars.forEach(function (c) { c.reset(true); });
-    G.allCards.forEach(function (m) { m.userData.frozen = false; m.scale.set(1, 1, 1); m.rotation.set(0, 0, 0); });
+    G.allCards.forEach(function (m) {
+      m.userData.frozen = false; m.scale.set(1, 1, 1); m.rotation.set(0, 0, 0);
+      m.material.emissive.setHex(0x4e4e4e);
+    });
     G.helpers.forEach(function (h) { h.active = false; h.mesh.visible = false; h.t = 0; });
     G.snow.active = false; G.snow.mesh.visible = false; G.snow.gaze = 0;
     G.snow.cool = 45 + Math.random() * 60;
@@ -533,7 +536,10 @@
     var m = G.killer.mesh, key = G.killer.key;
     // картка в позі кидка, впритул до обличчя
     if (key && key !== 'snow') {
-      m.material.map = window.Art.make(key, 'lunge');
+      var lt = window.Art.make(key, 'lunge');
+      m.material.map = lt;
+      m.material.emissiveMap = lt;
+      m.material.emissive.setHex(0x8a8a8a);   // скрімер яскравіший
       m.material.needsUpdate = true;
     }
     var h = (m.userData && m.userData.h) || 1.8;
@@ -810,7 +816,7 @@
     // помічників видно навіть у темряві — вони «свої»
     G.helpers.forEach(function (h) {
       if (!h.active) return;
-      h.mesh.material.emissive.setHex(0x232d10);
+      h.mesh.material.emissive.setHex(0x6a7a3a);   // помічників видно в темряві
     });
 
     faceCards();

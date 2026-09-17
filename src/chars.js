@@ -45,8 +45,18 @@
     var planeH = h / USABLE;
     var planeW = planeH * (A.W / A.H);
 
+    /* Світлотінь у персонажа вже НАМАЛЬОВАНА на картці.
+       Якщо освітлювати її сценою повністю, ліхтар «засвічує» малюнок
+       і фігура стає пласкою. Тому картка частково світиться сама
+       (emissiveMap), а світло сцени лише додається згори:
+         у темряві  — видно тьмяний силует із власною тінню
+         під ліхтарем — малюнок не вигорає                          */
+    var tex = A.make(key, 'stand');
     var mat = new T.MeshLambertMaterial({
-      map: A.make(key, 'stand'),
+      map: tex,
+      color: 0x9c9c9c,
+      emissiveMap: tex,
+      emissive: new T.Color(0x4e4e4e),
       transparent: true,
       alphaTest: 0.38,
       side: T.DoubleSide
@@ -129,7 +139,9 @@
 
   Char.prototype.applyPose = function (name) {
     this.pose = name;
-    this.mesh.material.map = A.make(this.key, name);
+    var t = A.make(this.key, name);
+    this.mesh.material.map = t;
+    this.mesh.material.emissiveMap = t;
     this.mesh.material.needsUpdate = true;
   };
 
