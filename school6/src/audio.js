@@ -36,79 +36,44 @@
     return s;
   }
 
-  /* ---------- ембієнт ----------
-     mood: 1..5 — звичайні ночі, 6 — позапланова зміна, 7 — кастомна.
-     На 6+ будівля звучить «неправильно»: нижче, повільніше, з підгулом,
-     який у нормальні ночі не чути.                                    */
-  var moodNodes = [];
-
-  function startAmbience(mood) {
+  /* ---------- ембієнт ---------- */
+  function startAmbience() {
     init();
     if (ctx.state === 'suspended') ctx.resume();
     if (started) return;
     started = true;
-    var deep = (mood || 1) >= 6;
 
     // 1. низький гул будівлі
-    var det = deep ? 0.945 : 1;                 // на 6-й ночі все просіло вниз
     [41.2, 55, 82.4].forEach(function (f, i) {
       var o = ctx.createOscillator(), g = ctx.createGain(), lp = ctx.createBiquadFilter();
       o.type = i === 2 ? 'triangle' : 'sawtooth';
-      o.frequency.value = f * det + (Math.random() - .5) * 0.6;
-      lp.type = 'lowpass'; lp.frequency.value = deep ? 128 : 160;
-      g.gain.value = [0.14, 0.10, 0.05][i] * (deep ? 1.25 : 1);
+      o.frequency.value = f + (Math.random() - .5) * 0.6;
+      lp.type = 'lowpass'; lp.frequency.value = 160;
+      g.gain.value = [0.14, 0.10, 0.05][i];
       o.connect(lp); lp.connect(g); g.connect(ambBus); o.start();
       ambNodes.push(o);
     });
 
     // 2. вентиляція
     var n = noise(), nf = ctx.createBiquadFilter(), ng = ctx.createGain();
-    nf.type = 'bandpass'; nf.frequency.value = deep ? 210 : 340; nf.Q.value = deep ? 0.9 : 0.55;
-    ng.gain.value = deep ? 0.20 : 0.16;
+    nf.type = 'bandpass'; nf.frequency.value = 340; nf.Q.value = 0.55;
+    ng.gain.value = 0.16;
     n.connect(nf); nf.connect(ng); ng.connect(ambBus); n.start();
     ambNodes.push(n);
 
     // 3. повільне "дихання" гулу
     var lfo = ctx.createOscillator(), lg = ctx.createGain();
-    lfo.frequency.value = deep ? 0.031 : 0.055;
-    lg.gain.value = deep ? 0.075 : 0.05;
+    lfo.frequency.value = 0.055; lg.gain.value = 0.05;
     lfo.connect(lg); lg.connect(ambBus.gain); lfo.start();
     ambNodes.push(lfo);
 
-    if (deep) {
-      // 4. підгул на межі чутності — його «відчуваєш», а не чуєш
-      var sub = ctx.createOscillator(), sg = ctx.createGain();
-      sub.type = 'sine'; sub.frequency.value = 27.5;
-      sg.gain.value = 0.22;
-      sub.connect(sg); sg.connect(ambBus); sub.start();
-      ambNodes.push(sub);
-
-      // 5. повільний «стогін» будівлі: розстроєна пара, що пливе
-      [63.7, 64.9].forEach(function (f) {
-        var o = ctx.createOscillator(), g = ctx.createGain(), lp = ctx.createBiquadFilter();
-        o.type = 'sawtooth'; o.frequency.value = f;
-        lp.type = 'lowpass'; lp.frequency.value = 220;
-        g.gain.value = 0.045;
-        o.connect(lp); lp.connect(g); g.connect(ambBus); o.start();
-        ambNodes.push(o);
-      });
-
-      // 6. рідкісний метал десь у трубах
-      moodNodes.push(setInterval(function () {
-        if (!started) return;
-        if (Math.random() < 0.55) SFX.pipe();
-      }, 11000));
-    }
-
-    ambBus.gain.setTargetAtTime(deep ? 0.58 : 0.5, now(), 2.5);
+    ambBus.gain.setTargetAtTime(0.5, now(), 2.5);
   }
 
   function stopAmbience() {
     if (!started) return;
     ambBus.gain.setTargetAtTime(0, now(), 0.4);
     var list = ambNodes.slice(); ambNodes = []; started = false;
-    moodNodes.forEach(function (id) { clearInterval(id); });
-    moodNodes = [];
     setTimeout(function () { list.forEach(function (n) { try { n.stop(); } catch (e) { } }); }, 900);
     stopHeart();
   }
@@ -219,27 +184,6 @@
       trem.connect(tg); tg.connect(sfxBus.gain); trem.start(t); trem.stop(t + 2.6);
     },
 
-    /* метал десь у трубах — довгий, далекий, неприємний */
-    pipe: function () {
-      init();
-      var t = now(), side = (Math.random() - .5) * 1.8;
-      var dur = 1.4 + Math.random() * 1.6;
-      var o = ctx.createOscillator(), g = ctx.createGain();
-      var bp = ctx.createBiquadFilter();
-      o.type = 'sawtooth';
-      var f0 = 150 + Math.random() * 260;
-      o.frequency.setValueAtTime(f0, t);
-      o.frequency.linearRampToValueAtTime(f0 * (0.72 + Math.random() * 0.2), t + dur);
-      bp.type = 'bandpass'; bp.Q.value = 14;
-      bp.frequency.setValueAtTime(f0 * 3, t);
-      bp.frequency.linearRampToValueAtTime(f0 * 2.1, t + dur);
-      o.connect(bp); bp.connect(g); out(g, side);
-      g.gain.setValueAtTime(0.0001, t);
-      g.gain.exponentialRampToValueAtTime(0.07, t + 0.35);
-      g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-      o.start(t); o.stop(t + dur + 0.1);
-    },
-
     paper: function () {
       init();
       var t = now(), n = noise(), f = ctx.createBiquadFilter(), g = ctx.createGain();
@@ -265,116 +209,35 @@
       });
     },
 
-    /* ============================================================
-       ДЖАМПСКЕР
-       Шість шарів, і головне — 90 мс ТИШІ перед ударом.
-       Саме провал у тиші робить наступний звук страшним,
-       а не гучність сама по собі.
-       pitch: 0.7 — низький рев (Копилови), 1.3 — верескливий (Гліб)
-       ============================================================ */
-    scream: function (pitch) {
+    scream: function () {                    // ДЖАМПСКЕР
       init();
       if (ctx.state === 'suspended') ctx.resume();
-      var P = pitch || 1;
-      var t0 = now();
-      var hit = t0 + 0.09;                    // момент удару
-      var dur = 2.0;
+      var t = now();
+      ambBus.gain.setTargetAtTime(0.05, t, 0.05);
 
-      // усе інше різко замовкає до удару й повертається після
-      ambBus.gain.cancelScheduledValues(t0);
-      ambBus.gain.setTargetAtTime(0.0, t0, 0.012);
+      var n = noise(), nf = ctx.createBiquadFilter(), ng = ctx.createGain();
+      nf.type = 'bandpass'; nf.Q.value = 0.7;
+      nf.frequency.setValueAtTime(3000, t);
+      nf.frequency.exponentialRampToValueAtTime(400, t + 1.1);
+      n.connect(nf); nf.connect(ng); ng.connect(sfxBus);
+      ng.gain.setValueAtTime(0.9, t);
+      ng.gain.exponentialRampToValueAtTime(0.001, t + 1.35);
+      n.start(t); n.stop(t + 1.5);
 
-      function shaper(amount) {
-        var d = ctx.createWaveShaper(), c = new Float32Array(1024);
-        for (var j = 0; j < 1024; j++) { var x = j / 512 - 1; c[j] = Math.tanh(x * amount); }
-        d.curve = c; d.oversample = '4x';
-        return d;
-      }
-
-      /* 1. вдих: коротке наростання перед тишею */
-      var pre = noise(), pf = ctx.createBiquadFilter(), pg = ctx.createGain();
-      pf.type = 'highpass'; pf.frequency.setValueAtTime(400, t0);
-      pf.frequency.exponentialRampToValueAtTime(2600, t0 + 0.08);
-      pre.connect(pf); pf.connect(pg); pg.connect(sfxBus);
-      pg.gain.setValueAtTime(0.0001, t0);
-      pg.gain.exponentialRampToValueAtTime(0.22, t0 + 0.07);
-      pg.gain.exponentialRampToValueAtTime(0.0001, hit);
-      pre.start(t0); pre.stop(hit + 0.02);
-
-      /* 2. удар: суб-бас, що провалюється вниз — фізичний поштовх */
-      var sub = ctx.createOscillator(), subG = ctx.createGain();
-      sub.type = 'sine';
-      sub.frequency.setValueAtTime(140, hit);
-      sub.frequency.exponentialRampToValueAtTime(24, hit + 0.55);
-      sub.connect(subG); subG.connect(sfxBus);
-      subG.gain.setValueAtTime(0.0001, hit);
-      subG.gain.linearRampToValueAtTime(0.95, hit + 0.006);
-      subG.gain.exponentialRampToValueAtTime(0.0001, hit + 0.9);
-      sub.start(hit); sub.stop(hit + 1.0);
-
-      /* 3. клац/тріск у момент удару — дає різкість атаки */
-      var clk = noise(), cf = ctx.createBiquadFilter(), cg2 = ctx.createGain();
-      cf.type = 'bandpass'; cf.frequency.value = 3200; cf.Q.value = 0.8;
-      clk.connect(cf); cf.connect(cg2); cg2.connect(sfxBus);
-      cg2.gain.setValueAtTime(0.9, hit);
-      cg2.gain.exponentialRampToValueAtTime(0.0001, hit + 0.09);
-      clk.start(hit); clk.stop(hit + 0.12);
-
-      /* 4. КРИК: пилка через дві форманти + швидке тремтіння —
-            звучить як горло, а не як синтезатор */
-      var base = 265 * P;
-      [1, 1.5, 2.02].forEach(function (mult, i) {
-        var o = ctx.createOscillator(), g = ctx.createGain();
-        var f1 = ctx.createBiquadFilter(), f2 = ctx.createBiquadFilter();
-        var dist = shaper(9);
+      [220, 331, 443, 661].forEach(function (f, i) {
+        var o = ctx.createOscillator(), g = ctx.createGain(), d = ctx.createWaveShaper();
+        var c = new Float32Array(256);
+        for (var j = 0; j < 256; j++) { var x = j / 128 - 1; c[j] = Math.tanh(x * 6); }
+        d.curve = c;
         o.type = 'sawtooth';
-        o.frequency.setValueAtTime(base * mult * 1.35, hit);
-        o.frequency.exponentialRampToValueAtTime(base * mult * 0.92, hit + 0.18);
-        o.frequency.exponentialRampToValueAtTime(base * mult * 0.42, hit + dur * 0.8);
-        f1.type = 'bandpass'; f1.Q.value = 6;
-        f1.frequency.setValueAtTime(760 * P, hit);
-        f1.frequency.exponentialRampToValueAtTime(420 * P, hit + dur * 0.7);
-        f2.type = 'bandpass'; f2.Q.value = 9;
-        f2.frequency.setValueAtTime(2150 * P, hit);
-        f2.frequency.exponentialRampToValueAtTime(1100 * P, hit + dur * 0.7);
-        o.connect(f1); f1.connect(f2); f2.connect(dist); dist.connect(g); g.connect(sfxBus);
-        g.gain.setValueAtTime(0.0001, hit);
-        g.gain.linearRampToValueAtTime(0.42 / (i * 0.8 + 1), hit + 0.012);
-        g.gain.setValueAtTime(0.42 / (i * 0.8 + 1), hit + 0.55);
-        g.gain.exponentialRampToValueAtTime(0.0001, hit + dur);
-        o.start(hit); o.stop(hit + dur + 0.05);
-
-        // зрив голосу: нерівне тремтіння висоти
-        var vib = ctx.createOscillator(), vg = ctx.createGain();
-        vib.type = 'square'; vib.frequency.setValueAtTime(23 + i * 9, hit);
-        vib.frequency.linearRampToValueAtTime(11 + i * 5, hit + dur);
-        vg.gain.setValueAtTime(base * mult * 0.10, hit);
-        vg.gain.exponentialRampToValueAtTime(base * mult * 0.02, hit + dur);
-        vib.connect(vg); vg.connect(o.frequency);
-        vib.start(hit); vib.stop(hit + dur + 0.05);
+        o.frequency.setValueAtTime(f * 3.2, t);
+        o.frequency.exponentialRampToValueAtTime(f * 0.55, t + 1.0);
+        o.connect(d); d.connect(g); g.connect(sfxBus);
+        g.gain.setValueAtTime(0.0001, t);
+        g.gain.exponentialRampToValueAtTime(0.2 / (i * 0.6 + 1), t + 0.02);
+        g.gain.exponentialRampToValueAtTime(0.0001, t + 1.2);
+        o.start(t); o.stop(t + 1.3);
       });
-
-      /* 5. металевий дзвін — «не людське» */
-      [1830, 2470, 3310].forEach(function (f, i) {
-        var o = ctx.createOscillator(), g = ctx.createGain();
-        o.type = 'square'; o.frequency.value = f * P;
-        o.connect(g); g.connect(sfxBus);
-        g.gain.setValueAtTime(0.0001, hit);
-        g.gain.linearRampToValueAtTime(0.055 / (i + 1), hit + 0.004);
-        g.gain.exponentialRampToValueAtTime(0.0001, hit + 0.7 + i * 0.25);
-        o.start(hit); o.stop(hit + 1.1 + i * 0.25);
-      });
-
-      /* 6. хвіст: широкий шум, що осідає — «дзвін у вухах» */
-      var tail = noise(), tf = ctx.createBiquadFilter(), tg2 = ctx.createGain();
-      tf.type = 'bandpass'; tf.Q.value = 0.6;
-      tf.frequency.setValueAtTime(3400, hit);
-      tf.frequency.exponentialRampToValueAtTime(260, hit + dur);
-      tail.connect(tf); tf.connect(tg2); tg2.connect(sfxBus);
-      tg2.gain.setValueAtTime(0.0001, hit);
-      tg2.gain.linearRampToValueAtTime(0.75, hit + 0.02);
-      tg2.gain.exponentialRampToValueAtTime(0.0001, hit + dur + 0.4);
-      tail.start(hit); tail.stop(hit + dur + 0.5);
     },
 
     chime6am: function () {

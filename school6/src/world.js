@@ -358,7 +358,7 @@
     var pl = new T.PointLight(0xbfd0c0, 0, 9, 2);
     pl.position.set(x, 2.6, z);
     g.add(pl);
-    lights.push({ light: pl, tube: tube, base: on ? 0.17 : 0, baseOn: !!on, flick: 0 });
+    lights.push({ light: pl, tube: tube, base: on ? 0.55 : 0, flick: 0 });
   }
 
   /* ============================================================ */
@@ -440,7 +440,7 @@
     g.add(box(1.40, 0.05, 0.55, M.dark, 0, 0.82, CZ0 + 0.28));
     slab(OX0, OZ, OX1, CZ0, 2.55, M.ceil, false);
     // світло в ніші — тьмяна лампа над головою
-    var deskLight = new T.PointLight(0xffc98a, 0.55, 4.2, 2);
+    var deskLight = new T.PointLight(0xffd9a0, 0.9, 5.5, 2);
     deskLight.position.set(0, 2.3, -6.4); g.add(deskLight);
     g.add(box(0.5, 0.06, 0.2, M.metal, 0, 2.45, -6.4));
 
@@ -451,7 +451,7 @@
         sg.add(box(1.5, 0.18, 0.3, M.wallLow, 0, 0.09 + i * 0.18, -i * 0.3));
       sg.position.set(x, 0, z); sg.rotation.y = dir;
       g.add(sg);
-      var dl = new T.PointLight(0x22303e, 0.12, 5, 2);
+      var dl = new T.PointLight(0x2a3a4a, 0.25, 6, 2);
       dl.position.set(x, 1.6, z); g.add(dl);
     }
     stairs(X0 + 0.9, -7.2, Math.PI / 2);
@@ -484,63 +484,7 @@
     /* дошка оголошень + портрети — щоб коридор не був пустий */
     for (var i4 = 0; i4 < 5; i4++) {
       g.add(box(0.7, 0.9, 0.04, M.paper, -9 + i4 * 4.4, 1.9, -8.55));
-      g.add(box(0.76, 0.96, 0.02, M.woodDark, -9 + i4 * 4.4, 1.9, -8.57));
     }
-    /* план евакуації — зелена табличка, впізнавана деталь школи */
-    [[-6.2, -8.55], [7.4, -8.55]].forEach(function (p) {
-      g.add(box(0.62, 0.44, 0.03, new T.MeshLambertMaterial({ color: 0x2f6b46 }), p[0], 2.05, p[1]));
-      g.add(box(0.66, 0.48, 0.02, M.metal, p[0], 2.05, p[1] - 0.02));
-    });
-    /* урни біля шафок */
-    [-11.5, 9.2].forEach(function (x) {
-      var bin = new T.Mesh(new T.CylinderGeometry(0.17, 0.14, 0.52, 10), M.metal);
-      bin.position.set(x, 0.26, -8.05); g.add(bin);
-    });
-    /* вогнегасники */
-    [[-4.6, -8.5], [5.2, -8.5]].forEach(function (p) {
-      var fe = new T.Mesh(new T.CylinderGeometry(0.075, 0.075, 0.46, 10),
-        new T.MeshLambertMaterial({ color: 0x8c1c13 }));
-      fe.position.set(p[0], 0.62, p[1]); g.add(fe);
-      g.add(box(0.05, 0.10, 0.05, M.metal, p[0], 0.90, p[1]));
-    });
-
-    /* ---------- реквізит у ніші охорони ---------- */
-    (function () {
-      var paperM = M.paper, metalM = M.metal, darkM = M.dark;
-      // графік чергувань на лівій стіні ніші
-      var sched = box(0.02, 0.46, 0.34, paperM, -2.12, 1.62, -6.20);
-      g.add(sched);
-      g.add(box(0.01, 0.50, 0.38, M.woodDark, -2.14, 1.62, -6.20));
-      // ключниця з ключами на правій стіні
-      g.add(box(0.03, 0.30, 0.40, M.woodDark, 2.12, 1.55, -6.20));
-      for (var k = 0; k < 6; k++) {
-        g.add(box(0.012, 0.11, 0.025, metalM, 2.09, 1.46, -6.36 + k * 0.064));
-      }
-      // старий телефон на тумбі
-      g.add(box(0.20, 0.07, 0.15, darkM, 1.30, 0.775, -6.30));
-      g.add(box(0.17, 0.05, 0.06, darkM, 1.30, 0.825, -6.36));
-      // чайник і склянка
-      var kettle = new T.Mesh(new T.CylinderGeometry(0.075, 0.085, 0.17, 10), metalM);
-      kettle.position.set(-1.46, 0.845, -6.30); g.add(kettle);
-      g.add(box(0.03, 0.09, 0.03, darkM, -1.37, 0.845, -6.30));
-      // стос паперів і ручка
-      g.add(box(0.21, 0.035, 0.29, paperM, -0.95, 0.775, -6.22, 0.12));
-      g.add(box(0.012, 0.012, 0.13, new T.MeshLambertMaterial({ color: 0x1f4f8c }),
-        -0.90, 0.796, -6.16, 0.5));
-      // радіоточка під стелею
-      g.add(box(0.26, 0.16, 0.09, M.woodDark, 1.75, 2.10, -6.62));
-      for (var v = 0; v < 5; v++) {
-        g.add(box(0.20, 0.012, 0.01, darkM, 1.75, 2.14 - v * 0.018, -6.575));
-      }
-      // кабелі, що звисають зі стелі
-      [[-0.6, -6.5], [0.7, -6.4]].forEach(function (p) {
-        var c1 = new T.Mesh(new T.CylinderGeometry(0.008, 0.008, 0.34, 6), darkM);
-        c1.position.set(p[0], 2.38, p[1]); c1.rotation.z = 0.25; g.add(c1);
-      });
-      // кружка з написом на прилавку (видно, коли встаєш)
-      var mug2 = new T.Mesh(new T.CylinderGeometry(0.048, 0.042, 0.10, 12), paperM);
-      mug2.position.set(0.85, 1.24, -6.70); g.add(mug2);
-    })();
 
     /* --- лампи --- */
     lamp(g, -11, -8.05, lights, true);
@@ -558,7 +502,7 @@
     /* --- вулиця за дверима --- */
     var st = new T.Mesh(new T.PlaneGeometry(40, 30), new T.MeshLambertMaterial({ color: 0x14161a }));
     st.rotation.x = -Math.PI / 2; st.position.set(0, -0.02, -26); g.add(st);
-    var lampPost = new T.PointLight(0xffb066, 0.85, 22, 1.7);
+    var lampPost = new T.PointLight(0xffb066, 1.3, 26, 1.6);
     lampPost.position.set(4.5, 4.2, -18); g.add(lampPost);
     g.add(box(0.2, 5, 0.2, M.metal, 4.5, 2.5, -18));
 

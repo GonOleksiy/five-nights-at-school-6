@@ -24,22 +24,13 @@
   var DRAIN = { base: 0.20, shutter: 0.30, light: 0.36, cams: 0.22, corridor: 0.55 };
 
   var AGGRO = {
-    1: { hlib: 2, titova: 0, kopylov: 0, kopylova: 0, ksan: 0, snow: 0.5 },
-    2: { hlib: 4, titova: 2, kopylov: 0, kopylova: 0, ksan: 2, snow: 0.7 },
-    3: { hlib: 6, titova: 4, kopylov: 3, kopylova: 3, ksan: 4, snow: 1.0 },
-    4: { hlib: 9, titova: 7, kopylov: 6, kopylova: 6, ksan: 7, snow: 1.4 },
-    5: { hlib: 12, titova: 10, kopylov: 10, kopylova: 10, ksan: 10, snow: 2.2 },
+    1: { hlib: 4, titova: 0, kopylov: 0, kopylova: 0, ksan: 2, snow: 0.7 },
+    2: { hlib: 6, titova: 4, kopylov: 0, kopylova: 0, ksan: 4, snow: 0.9 },
+    3: { hlib: 8, titova: 6, kopylov: 5, kopylova: 5, ksan: 6, snow: 1.2 },
+    4: { hlib: 10, titova: 8, kopylov: 8, kopylova: 8, ksan: 8, snow: 1.5 },
+    5: { hlib: 13, titova: 11, kopylov: 11, kopylova: 11, ksan: 11, snow: 2.4 },
     6: { hlib: 16, titova: 15, kopylov: 15, kopylova: 15, ksan: 15, snow: 3.2 }
   };
-
-  /* Темп перших ночей. Перша ніч має бути майже порожньою —
-     гравець вчиться дивитись і слухати, а не відбиватись.      */
-  function paceMul() {
-    return G.night <= 1 ? 2.1
-      : G.night === 2 ? 1.7
-        : G.night === 3 ? 1.35
-          : G.night === 4 ? 1.12 : 1;
-  }
 
   /* ---------- голоси ----------
      Ніхто не говорить словами — тільки бурмотіння, у кожного своє.
@@ -81,7 +72,7 @@
     perkReveal: 0, perkImmune: 0, cheat: false,
     yaw: 0, pitch: 0,
     shake: 0, killer: null,
-    ambT: 8, heartOn: false, threat: 0, jumpT: 0, allCards: [], ambStopT: null
+    ambT: 8, heartOn: false, threat: 0, jumpT: 0, allCards: []
   };
 
   /* ---------- three ---------- */
@@ -96,9 +87,9 @@
     renderer.setClearColor(0x03040a);
 
     scene = new T.Scene();
-    scene.fog = new T.FogExp2(0x04050a, 0.082);
-    scene.add(new T.AmbientLight(0x1b2130, 0.085));
-    var moon = new T.DirectionalLight(0x93a8c8, 0.085);
+    scene.fog = new T.FogExp2(0x05060a, 0.055);
+    scene.add(new T.AmbientLight(0x252c3c, 0.17));
+    var moon = new T.DirectionalLight(0x93a8c8, 0.16);
     moon.position.set(-6, 12, -20); scene.add(moon);
 
     camera = new T.PerspectiveCamera(60, 1, 0.05, 90);
@@ -110,7 +101,7 @@
     world = W.build(scene);
 
     // ліхтар
-    flashlight = new T.SpotLight(0xffeec4, 0, 34, 0.36, 0.42, 1.15);
+    flashlight = new T.SpotLight(0xfff0d0, 0, 30, 0.40, 0.55, 1.3);
     flashlight.castShadow = true;
     flashlight.shadow.mapSize.set(1024, 1024);
     flashlight.shadow.camera.near = 0.3;
@@ -163,12 +154,7 @@
 
   /* ---------- персонажі ---------- */
   function initChars() {
-    var LANES = [0, 0.62, -0.62, 1.24, -1.24];
-    G.chars = C.DEF.map(function (d, i) {
-      var c = new C.Char(d, scene);
-      c.lane = LANES[i] || 0;          // свій «коридорний ряд», щоб не злипались
-      return c;
-    });
+    G.chars = C.DEF.map(function (d) { return new C.Char(d, scene); });
     G.helpers = C.HELPERS.map(function (d) {
       var o = { def: d, key: d.key, mesh: C.billboard(d.key), t: 0, active: false };
       o.mesh.visible = false; scene.add(o.mesh);
@@ -197,8 +183,6 @@
 
   /* ---------- ніч ---------- */
   function startNight(n) {
-    if (G.ambStopT) { clearTimeout(G.ambStopT); G.ambStopT = null; }
-    S.stopAmbience();                 // гарантовано з нуля, інакше стара ніч глушить нову
     G.night = n; G.t = 0; G.clock = 0; G.power = 100;
     G.stance = 'sit'; G.stanceT = 1; G.flash = false;
     G.camsUp = false; G.cam = 0;
@@ -208,7 +192,7 @@
     G.perkReveal = 0; G.perkImmune = 0; G.cheat = false;
     G.ambT = 10 + Math.random() * 10;
 
-    G.chars.forEach(function (c) { c.reset(true); c.cool *= paceMul(); });
+    G.chars.forEach(function (c) { c.reset(true); });
     G.allCards.forEach(function (m) {
       m.userData.frozen = false; m.scale.set(1, 1, 1); m.rotation.set(0, 0, 0);
       m.material.emissive.setHex(0x4e4e4e);
@@ -217,14 +201,14 @@
     G.snow.active = false; G.snow.mesh.visible = false; G.snow.gaze = 0;
     G.snow.cool = 45 + Math.random() * 60;
 
-    world.lights.forEach(function (l) { l.base = l.baseOn ? 0.17 : 0; });
+    world.lights.forEach(function (l) { l.base = l.base > 0 ? 0.55 : 0; });
 
     hideAll();
     elHud.classList.remove('hidden');
     elNight.textContent = n === 7 ? 'Кастомна ніч' : 'Ніч ' + n;
     setCam(0);
     G.phase = 'play';
-    S.startAmbience(n);
+    S.startAmbience();
     ST.prefetch();
     last = performance.now();
   }
@@ -275,23 +259,14 @@
         // під наглядом майже завмирає — класичне правило FNAF
         ch.wait -= dt * (watched(ch) ? 0.10 : 1) * (G.power <= 0 ? 2.2 : 1);
         if (ch.wait <= 0) {
-          var next = ch.route[Math.min(ch.idx + 1, ch.route.length - 1)];
-          // місце зайняте — чекаємо, інакше вони злипаються в одну фігуру
-          if (!spotFree(ch, next)) {
-            ch.blocked = (ch.blocked || 0) + 1;
-            if (ch.blocked > 14) { retreat(ch); return; }   // страховка від заклинювання
-            ch.wait = 0.5 + Math.random() * 0.7;
-            return;
-          }
-          ch.blocked = 0;
           ch.idx++;
           if (ch.idx >= ch.route.length - 1) {
-            ch.snapTo(ch.route[ch.route.length - 1], ch.lane);
+            ch.snapTo(ch.route[ch.route.length - 1]);
             ch.state = 'atDoor';
             ch.windowT = ch.def.window;
             arrive(ch);
           } else {
-            ch.snapTo(ch.route[ch.idx], ch.lane);
+            ch.snapTo(ch.route[ch.idx]);
             ch.wait = stepTime(ch);
             moveSound(ch);
           }
@@ -315,46 +290,17 @@
 
   function retreat(ch) {
     ch.reset(false);
-    ch.cool = (10 + Math.random() * 12) * (1 - agg(ch.key) * 0.03) * paceMul();
+    ch.cool = (10 + Math.random() * 12) * (1 - agg(ch.key) * 0.03);
     if (ch.key === 'hlib') { S.shutUp(); showSub(''); }
   }
 
   /* вивести персонажа на маршрут */
-  function launch(ch) {
-    ch.spawn(ch.lane);
-    ch.wait = stepTime(ch);
-    ch.blocked = 0;
-  }
-
-  /* ---------- чи вільне місце ----------
-     Картки широкі (≈1.4 м), тому двоє в сусідніх вузлах візуально
-     злипаються. Вважаємо зайнятим усе, що ближче 1.9 м.          */
-  function spotFree(ch, nodeName) {
-    var p = C.N[nodeName];
-    if (!p) return true;
-    var i, o, q;
-    for (i = 0; i < G.chars.length; i++) {
-      o = G.chars[i];
-      if (o === ch || !o.mesh.visible) continue;
-      q = o.mesh.position;
-      if (Math.hypot(q.x - p[0], q.z - p[1]) < 1.9) return false;
-    }
-    for (i = 0; i < G.helpers.length; i++) {
-      if (!G.helpers[i].active) continue;
-      q = G.helpers[i].mesh.position;
-      if (Math.hypot(q.x - p[0], q.z - p[1]) < 1.9) return false;
-    }
-    if (G.snow.active) {
-      q = G.snow.mesh.position;
-      if (Math.hypot(q.x - p[0], q.z - p[1]) < 1.9) return false;
-    }
-    return true;
-  }
+  function launch(ch) { ch.spawn(); ch.wait = stepTime(ch); }
 
   /* час до наступного стрибка */
   function stepTime(ch) {
     var a = agg(ch.key);
-    return ch.def.step / (1 + a * 0.115) * (0.72 + Math.random() * 0.56) * paceMul();
+    return ch.def.step / (1 + a * 0.115) * (0.72 + Math.random() * 0.56);
   }
 
   /* ---------- «на тебе дивляться?» ----------
@@ -559,31 +505,21 @@
 
   function killSnow() {
     G.snow.active = false;
-    G.killer = { name: 'СНІГОВИК', key: 'snow', mesh: G.snow.mesh, story: ST.death('snow'), fem: false, pitch: 0.72 };
+    G.killer = { name: 'СНІГОВИК', key: 'snow', mesh: G.snow.mesh, story: ST.death('snow') };
     doKill();
   }
 
   /* ---------- смерть ---------- */
-  /* висота крику під кожного — Копилови ревуть, Гліб верещить */
-  var SCREAM_PITCH = {
-    hlib: 1.30, titova: 0.86, kopylov: 0.60, kopylova: 0.92,
-    ksan: 1.02, snow: 0.72
-  };
-  var FEMALE = { titova: true, kopylova: true, ksan: true };
-
   function kill(ch) {
     if (!ch) return;
     var story, key = ch.key;
     if (key === 'hlib') {
-      story = ST.hlibIntro() + '\n\n' + ST.generate();
+      story = ST.generate();                       // Глібу історію генерує ШІ
       ST.prefetch();
     } else {
       story = ST.death(key === 'kopylova' ? 'kopylov' : key);
     }
-    G.killer = {
-      name: ch.def.name, key: key, mesh: ch.mesh, story: story, voice: key,
-      fem: !!FEMALE[key], pitch: SCREAM_PITCH[key] || 1
-    };
+    G.killer = { name: ch.def.name, key: key, mesh: ch.mesh, story: story, voice: key };
     doKill();
     setTimeout(function () {
       if (G.phase === 'dead') S.say(story.replace(/\n+/g, ' '), voiceFor(key, { volume: 1, muffle: 0 }));
@@ -595,7 +531,7 @@
     G.phase = 'dead';
     S.stopHeart(); G.heartOn = false;
     S.shutUp();
-    S.sfx.scream(G.killer ? G.killer.pitch : 1);
+    S.sfx.scream();
     G.shake = 1.9;
     G.camsUp = false; elCams.classList.add('hidden');
     document.body.classList.remove('camsup');
@@ -626,7 +562,7 @@
     setTimeout(function () {
       elRed.style.opacity = 0;
       m.userData.frozen = false;
-      $('over-title').textContent = G.killer.name + (G.killer.fem ? ' ЗНАЙШЛА ТЕБЕ' : ' ЗНАЙШОВ ТЕБЕ');
+      $('over-title').textContent = G.killer.name + ' ЗНАЙШОВ ТЕБЕ';
       $('over-story').textContent = G.killer.story;
       $('gameover').classList.remove('hidden');
       S.stopAmbience();
@@ -675,7 +611,7 @@
       $('btn-next').textContent = 'НАСТУПНА НІЧ';
     }
     $('win').classList.remove('hidden');
-    G.ambStopT = setTimeout(function () { S.stopAmbience(); }, 3000);
+    setTimeout(function () { S.stopAmbience(); }, 3000);
   }
 
   /* ---------- UI ---------- */
@@ -782,68 +718,26 @@
     S.sfx.lampFlicker(); S.sfx.click();
   }
 
-  /* ---------- ембієнтні події ----------
-     Школа має «жити» сама по собі, інакше тиша між появами читається
-     як пауза в грі, а не як напруга. На пізніх ночах події частішають. */
-  var AMB = [
-    // [вага, функція]
-    [34, function () {                                   // Гліб бурмоче десь далеко
-      var line = ST.mutter();
-      var pan = (Math.random() - 0.5) * 1.7;
-      showSub('<b>десь у коридорі:</b> ' + line);
-      S.say(line, voiceFor('hlib', { volume: 0.55, muffle: 1, pan: pan }));
-      if (Math.random() < 0.32) setTimeout(function () {
-        if (G.phase !== 'play') return;
-        S.sfx.scream(); S.duck(0.35, 0.2);
-        setTimeout(function () { if (G.phase === 'play') S.duck(0.5, 2); }, 1500);
-      }, 3200 + Math.random() * 2500);
-    }],
-    [14, function () { S.sfx.knock(Math.random() < .5 ? -0.8 : 0.8); }],
-    [14, function () {                                   // лампа блимає у випадковому місці
-      var l = world.lights[(Math.random() * world.lights.length) | 0];
-      l.flick = 1.2; S.sfx.lampFlicker();
-    }],
-    [10, function () { S.sfx.step(0.9, (Math.random() - .5) * 1.8); }],
-    [8, function () { S.sfx.pipe(); }],                  // метал у трубах
-    [6, function () {                                    // ціла гілка ламп гасне на кілька секунд
-      var side = Math.random() < .5 ? -1 : 1;
-      var hit = [];
-      world.lights.forEach(function (l) {
-        if ((l.light.position.x < 0) === (side < 0) && l.base > 0) { l.base = 0; hit.push(l); }
-      });
-      if (!hit.length) return;
-      S.sfx.lampFlicker(); S.sfx.knock(side * 0.9);
-      setTimeout(function () {
-        hit.forEach(function (l) { l.base = 0.55; l.flick = 1.0; });
-        S.sfx.lampFlicker();
-      }, 3000 + Math.random() * 4000);
-    }],
-    [6, function () {                                    // рипить стілець / щось тягнуть по підлозі
-      S.sfx.pipe();
-      setTimeout(function () { if (G.phase === 'play') S.sfx.step(0.75, (Math.random() - .5) * 1.6); }, 700);
-    }],
-    [5, function () {                                    // радіоточка ожила на секунду
-      showSub('<b>радіоточка:</b> …перевірка звуку. Перевірка. Один, два…');
-      S.say('Перевірка звуку. Перевірка. Один, два.',
-        voiceFor('phone', { volume: 0.45, muffle: 1, pan: 0.6 }));
-      S.sfx.camStatic();
-    }],
-    [3, function () {                                    // хтось дуже далеко сміється
-      S.say('ха ха ха ха', voiceFor('hlib', { volume: 0.3, muffle: 1, rate: 0.8, pan: (Math.random() - .5) * 1.8 }));
-    }]
-  ];
-  var AMB_TOTAL = AMB.reduce(function (s, e) { return s + e[0]; }, 0);
-
+  /* ---------- ембієнтні події ---------- */
   function ambientEvents(dt) {
     G.ambT -= dt;
     if (G.ambT > 0) return;
-    // пізні ночі — щільніше
-    var pace = G.night >= 6 ? 0.62 : (G.night >= 4 ? 0.82 : 1);
-    G.ambT = (16 + Math.random() * 30) * pace;
-    var r = Math.random() * AMB_TOTAL;
-    for (var i = 0; i < AMB.length; i++) {
-      r -= AMB[i][0];
-      if (r <= 0) { AMB[i][1](); return; }
+    G.ambT = 22 + Math.random() * 34;
+    var r = Math.random();
+    if (r < 0.40) {
+      var line = ST.mutter();
+      showSub('<b>десь у коридорі:</b> ' + line);
+      S.say(line, voiceFor('hlib', { volume: 0.55, muffle: 1, pan: (Math.random() - 0.5) * 1.7 }));
+      if (Math.random() < 0.35) setTimeout(function () {
+        if (G.phase === 'play') { S.sfx.scream(); S.duck(0.35, 0.2); setTimeout(function () { S.duck(0.5, 2); }, 1500); }
+      }, 3200 + Math.random() * 2500);
+    } else if (r < 0.62) {
+      S.sfx.knock(Math.random() < .5 ? -0.8 : 0.8);
+    } else if (r < 0.82) {
+      var l = world.lights[(Math.random() * world.lights.length) | 0];
+      l.flick = 1.2; S.sfx.lampFlicker();
+    } else {
+      S.sfx.step(0.9, (Math.random() - .5) * 1.8);
     }
   }
 
@@ -902,14 +796,14 @@
     world.lights.forEach(function (l) {
       var x = l.light.position.x, z = l.light.position.z;
       var zone = (z < -9) ? 'V' : (x < 0 ? 'L' : 'R');
-      var boost = G.corridor[zone] > 0 ? 2.1 : 0;
+      var boost = G.corridor[zone] > 0 ? 1.5 : 0;
       if (l.flick > 0) { l.flick -= dt * 1.5; }
       var fl = l.flick > 0 ? (Math.random() < 0.4 ? 0 : 1) : 1;
       var v = (l.base + boost) * fl * (G.power > 0 ? 1 : 0);
       l.light.intensity += (v - l.light.intensity) * Math.min(1, dt * 12);
       l.tube.material.color.setScalar(Math.min(1, 0.12 + l.light.intensity * 0.8));
     });
-    world.deskLight.intensity = G.power > 0 ? (G.stance === 'hide' ? 0.20 : 0.55) : 0.0;
+    world.deskLight.intensity = G.power > 0 ? (G.stance === 'hide' ? 0.35 : 0.9) : 0.0;
 
     // камера гравця
     var targetY = EYE[G.stance];
@@ -934,7 +828,7 @@
       camera.position.y += Math.sin(G.t * 1.6) * br;
     }
 
-    flashlight.intensity += ((G.flash && G.power > 0 && !G.camsUp ? 4.6 : 0) - flashlight.intensity) * Math.min(1, dt * 10);
+    flashlight.intensity += ((G.flash && G.power > 0 && !G.camsUp ? 2.6 : 0) - flashlight.intensity) * Math.min(1, dt * 10);
 
     // помічників видно навіть у темряві — вони «свої»
     G.helpers.forEach(function (h) {

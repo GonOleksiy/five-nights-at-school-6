@@ -973,28 +973,10 @@
       }
     },
     nazar: {
-      h: 1.93, headR: 0.066, torso: 0.245, shoulder: 0.138, hip: 0.118, arm: 0.54, handS: 1.2,
-      cloth: '#a6a69c', pant: '#2a2a32',
+      h: 1.93, headR: 0.068, torso: 0.245, shoulder: 0.148, hip: 0.126, arm: 0.52, handS: 1.2,
+      cloth: '#98988f', pant: '#2a2a32',
       skin: '#ccab91', hairCol: '#2c1e14', hairType: 'bowl', eye: '#3a2a1a', brow: '#2c1e14',
-      browAngle: 0.05, mouthW: 0.30, smile: 0.45, pupil: 0.40,
-      /* мітка: світний екран телефона в руці — видно здалеку навіть у темряві */
-      postDecor: function (g, m) {
-        var px = m.cx + m.shW * 0.62, py = m.shY + m.tH * 0.34;
-        var gl = g.createRadialGradient(px, py, 2, px, py, 46 * m.s);
-        gl.addColorStop(0, 'rgba(150,200,255,0.55)');
-        gl.addColorStop(1, 'rgba(120,170,255,0)');
-        g.fillStyle = gl;
-        g.beginPath(); g.arc(px, py, 46 * m.s, 0, 6.3); g.fill();
-        g.save();
-        g.translate(px, py); g.rotate(-0.16);
-        g.fillStyle = '#15161b';
-        g.fillRect(-13 * m.s, -24 * m.s, 26 * m.s, 48 * m.s);
-        g.fillStyle = '#cfe4ff';
-        g.fillRect(-10 * m.s, -21 * m.s, 20 * m.s, 42 * m.s);
-        g.fillStyle = 'rgba(90,140,200,0.5)';
-        for (var i = 0; i < 4; i++) g.fillRect(-7 * m.s, (-15 + i * 9) * m.s, 14 * m.s, 3 * m.s);
-        g.restore();
-      }
+      browAngle: 0.05, mouthW: 0.30, smile: 0.45, pupil: 0.40
     }
   };
 

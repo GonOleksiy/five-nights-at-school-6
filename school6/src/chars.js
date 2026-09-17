@@ -152,19 +152,11 @@
     this.mesh.rotation.z = Math.sin(t * 0.55 + this.phase) * 0.006;
   };
 
-  /* Миттєвий стрибок у вузол + нова застигла поза.
-     lane — зсув уздовж осі коридору, щоб двоє поруч не злипались
-     в одну кашу з рук і ніг.                                      */
-  Char.prototype.snapTo = function (nodeName, lane) {
+  /* Миттєвий стрибок у вузол + нова застигла поза. */
+  Char.prototype.snapTo = function (nodeName) {
     var p = N[nodeName];
     this.node = nodeName;
-    var off = lane || 0;
-    var vertical = Math.abs(p[0]) > 11;       // бічні коридори йдуть уздовж Z
-    this.mesh.position.set(
-      p[0] + (vertical ? 0 : off),
-      this.mesh.userData.baseY,
-      p[1] + (vertical ? off : 0)
-    );
+    this.mesh.position.set(p[0], this.mesh.userData.baseY, p[1]);
     this.mesh.visible = true;
     var keys = A.POSE_KEYS;
     this.applyPose(keys[Math.floor(Math.random() * keys.length)]);
