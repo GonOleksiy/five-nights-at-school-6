@@ -1282,6 +1282,37 @@
     };
   }
 
+  /* ---------- прогрів карток ----------
+     Одна картка персонажа малюється ~120 мс (заміряно: медіана 116,
+     максимум 273). Робилось це ліниво — просто в мить, коли персонаж
+     уперше ставав у нову позу. Тобто гра підвисала на кілька кадрів
+     рівно тоді, коли хтось з'являвся, — найгірший можливий момент.
+     Тепер кеш набивається дрібними порціями, поки гравець у меню
+     й читає дзвінок Костіка.                                        */
+  function warmCards() {
+    var A = window.Art, jobs = [], i = 0;
+    C.DEF.forEach(function (d) {
+      A.POSE_KEYS.concat(['lunge']).forEach(function (p) { jobs.push([d.key, p]); });
+    });
+    C.HELPERS.forEach(function (h) { jobs.push([h.key, 'stand']); });
+    jobs.push(['snow', 'stand']);
+
+    /* Рівно одна картка за виклик. Пакет «поки не мине 10 мс» міг
+       узятись за картку на 273 мс і смикнути меню — а зріз тут
+       обмежений вартістю рівно одного малюнка. */
+    function step() {
+      if (i >= jobs.length) return;
+      try { A.make(jobs[i][0], jobs[i][1]); } catch (e) { }
+      i++;
+      if (i < jobs.length) schedule();
+    }
+    function schedule() {
+      if (window.requestIdleCallback) window.requestIdleCallback(step, { timeout: 300 });
+      else setTimeout(step, 40);
+    }
+    schedule();
+  }
+
   /* ---------- старт ---------- */
   function boot() {
     initGL();
@@ -1293,6 +1324,7 @@
     camera.position.set(SEAT.x, EYE.sit, SEAT.z);
     requestAnimationFrame(frame);   /* кадр іде першим: збій у меню не вб'є рендер */
     initMenu();
+    warmCards();
   }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
