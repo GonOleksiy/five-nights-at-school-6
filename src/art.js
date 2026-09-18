@@ -436,18 +436,44 @@
 
     g.restore();
 
-    /* вуха */
+    /* Вуха. Були двома пласкими блямбами-ручками. Тепер завиток,
+       мушля з тінню й мочка — на відстані читається як вухо, а не
+       як приклеєний овал. */
     [-1, 1].forEach(function (s) {
-      var exx = cx + s * r * 0.82, eyy = cy + r * 0.06;
+      var exx = cx + s * r * 0.79, eyy = cy + r * 0.05;
       volume(g, function (c) {
         c.beginPath();
-        c.ellipse(exx, eyy, r * 0.13, r * 0.26, s * 0.12, 0, 6.3);
+        c.moveTo(exx - s * r * 0.10, eyy - r * 0.22);
+        c.bezierCurveTo(exx + s * r * 0.15, eyy - r * 0.26,
+          exx + s * r * 0.16, eyy + r * 0.06,
+          exx + s * r * 0.06, eyy + r * 0.20);
+        c.quadraticCurveTo(exx - s * r * 0.02, eyy + r * 0.30,
+          exx - s * r * 0.09, eyy + r * 0.18);
+        c.quadraticCurveTo(exx - s * r * 0.14, eyy - r * 0.04,
+          exx - s * r * 0.10, eyy - r * 0.22);
+        c.closePath();
       }, sh(0.10), {
-        axis: [exx - r * 0.13, 0, exx + r * 0.13, 0], light: s,
-        baseHex: skin, deep: 0.5, lineW: 1.6, rim: 0.25
+        axis: [exx - r * 0.15, 0, exx + r * 0.15, 0], light: s,
+        baseHex: skin, deep: 0.5, lineW: 1.6, rim: 0.25,
+        detail: function (c) {
+          // мушля
+          c.strokeStyle = 'rgba(24,12,12,0.34)'; c.lineWidth = r * 0.030;
+          c.beginPath();
+          c.moveTo(exx + s * r * 0.02, eyy - r * 0.16);
+          c.bezierCurveTo(exx + s * r * 0.09, eyy - r * 0.10,
+            exx + s * r * 0.07, eyy + r * 0.06,
+            exx - s * r * 0.01, eyy + r * 0.11);
+          c.stroke();
+          // завиток
+          c.strokeStyle = 'rgba(24,12,12,0.22)'; c.lineWidth = r * 0.022;
+          c.beginPath();
+          c.moveTo(exx - s * r * 0.06, eyy - r * 0.17);
+          c.quadraticCurveTo(exx - s * r * 0.11, eyy + r * 0.02,
+            exx - s * r * 0.05, eyy + r * 0.13);
+          c.stroke();
+        }
       });
-      g.strokeStyle = 'rgba(20,10,10,0.32)'; g.lineWidth = 1.5;
-      g.beginPath(); g.ellipse(exx, eyy, r * 0.06, r * 0.15, s * 0.12, 0, 6.3); g.stroke();
+      ao(g, exx - s * r * 0.12, eyy, r * 0.09, r * 0.20, 0.30);
     });
 
     g.save();
@@ -1019,21 +1045,47 @@
         g.strokeRect(-26 * m.s, -40 * m.s, 52 * m.s, 80 * m.s);
         g.restore();
       },
+      /* Окуляри були товстими ідеальними кільцями — читались як
+         плавальні. Тонша оправа, дужки до вух, місток дугою і подвійний
+         відблиск роблять із них звичайні вчительські окуляри. */
       headDecor: function (g, cx, cy, r) {
         g.save();
+        var ex = r * 0.34, ey = cy - r * 0.06, rx = r * 0.285, ry = r * 0.235;
         [-1, 1].forEach(function (s) {
-          g.strokeStyle = 'rgba(18,18,22,0.9)'; g.lineWidth = r * 0.062;
-          g.beginPath(); g.ellipse(cx + s * r * 0.35, cy - r * 0.06, r * 0.31, r * 0.25, 0, 0, 6.3); g.stroke();
-          g.fillStyle = 'rgba(200,220,255,0.10)';
-          g.beginPath(); g.ellipse(cx + s * r * 0.35, cy - r * 0.06, r * 0.31, r * 0.25, 0, 0, 6.3); g.fill();
-          g.strokeStyle = 'rgba(255,255,255,0.32)'; g.lineWidth = r * 0.035;
+          var lx = cx + s * ex;
+          // дужка до вуха — під оправою
+          g.strokeStyle = 'rgba(16,16,20,0.75)'; g.lineWidth = r * 0.026;
           g.beginPath();
-          g.moveTo(cx + s * r * 0.35 - r * 0.18, cy + r * 0.04);
-          g.lineTo(cx + s * r * 0.35 + r * 0.02, cy - r * 0.18);
+          g.moveTo(lx + s * rx * 0.94, ey - ry * 0.28);
+          g.quadraticCurveTo(cx + s * r * 0.70, ey - ry * 0.34, cx + s * r * 0.80, ey + r * 0.02);
+          g.stroke();
+          // скло
+          g.fillStyle = 'rgba(196,214,238,0.11)';
+          g.beginPath(); g.ellipse(lx, ey, rx, ry, 0, 0, 6.3); g.fill();
+          // оправа
+          g.strokeStyle = 'rgba(16,16,20,0.92)'; g.lineWidth = r * 0.040;
+          g.beginPath(); g.ellipse(lx, ey, rx, ry, 0, 0, 6.3); g.stroke();
+          g.strokeStyle = 'rgba(120,120,130,0.30)'; g.lineWidth = r * 0.014;
+          g.beginPath(); g.ellipse(lx, ey, rx * 0.93, ry * 0.90, 0, 0, 6.3); g.stroke();
+          // відблиски
+          g.strokeStyle = 'rgba(255,255,255,0.40)'; g.lineWidth = r * 0.030;
+          g.lineCap = 'round';
+          g.beginPath();
+          g.moveTo(lx - rx * 0.62, ey + ry * 0.30);
+          g.lineTo(lx - rx * 0.02, ey - ry * 0.62);
+          g.stroke();
+          g.strokeStyle = 'rgba(255,255,255,0.22)'; g.lineWidth = r * 0.016;
+          g.beginPath();
+          g.moveTo(lx - rx * 0.30, ey + ry * 0.46);
+          g.lineTo(lx - rx * 0.02, ey + ry * 0.10);
           g.stroke();
         });
-        g.strokeStyle = 'rgba(18,18,22,0.9)'; g.lineWidth = r * 0.062;
-        g.beginPath(); g.moveTo(cx - r * 0.05, cy - r * 0.07); g.lineTo(cx + r * 0.05, cy - r * 0.07); g.stroke();
+        // місток дугою над переніссям
+        g.strokeStyle = 'rgba(16,16,20,0.92)'; g.lineWidth = r * 0.034;
+        g.beginPath();
+        g.moveTo(cx - ex + rx * 0.96, ey - ry * 0.10);
+        g.quadraticCurveTo(cx, ey - ry * 0.48, cx + ex - rx * 0.96, ey - ry * 0.10);
+        g.stroke();
         g.restore();
       }
     },
