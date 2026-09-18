@@ -19,7 +19,7 @@
 
   /* ---------- сталі ---------- */
   var EYE = { hide: 0.45, sit: 1.02, stand: 1.78 };
-  var SEAT = { x: 0, z: -5.95 };
+  var SEAT = { x: 0, z: -6.05 };
   var NIGHT_SECONDS = 300;                 // 6 ігрових годин
   /* Витрата заряду, % за секунду. Ніч — 300 с.
      Школа тепер темна, тож ліхтар горітиме майже постійно — при старих
@@ -99,6 +99,7 @@
      Це і робить планшет вартим свого заряду, і пояснює, чому Столову
      видно тільки на CAM 05. */
   var AMB_DARK = 0.085, AMB_CAM = 0.62;
+  var FLASH_I = 2.3;          /* яскравість ліхтаря; вище — біліють ближні стіни */
   var PIX = 0.58;
 
   function initGL() {
@@ -129,8 +130,10 @@
     flashlight.shadow.mapSize.set(1024, 1024);
     flashlight.shadow.camera.near = 0.3;
     flashlight.shadow.camera.far = 30;
-    // джерело виносимо вперед за прилавок, інакше конус б'є у власну стільницю
-    flashlight.position.set(0, -0.06, -0.85);
+    /* Джерело тримаємо ВИЩЕ за стіл: монітори й прилавок лишаються поза
+       конусом, тож ліхтар не засвічує власне робоче місце. Раніше точка
+       світла опинялась за 2 см від підставки монітора — і та біліла. */
+    flashlight.position.set(0, 0.60, -0.45);
     camera.add(flashlight);
     camera.add(flashlight.target);
     flashlight.target.position.set(0, -0.10, -6);
@@ -216,6 +219,7 @@
     if (G.ambStopT) { clearTimeout(G.ambStopT); G.ambStopT = null; }
     if (G.overT) { clearTimeout(G.overT); G.overT = null; }
     S.stopAmbience();                 // гарантовано з нуля, інакше стара ніч глушить нову
+    world.desk.visible = true;        // після скрімера стіл лишався схованим
     G.night = n; G.t = 0; G.clock = 0; G.power = 100;
     G.stance = 'sit'; G.stanceT = 1; G.flash = false;
     G.camsUp = false; G.cam = 0;
@@ -632,6 +636,7 @@
     var h = (m.userData && m.userData.h) || 1.8;
     m.visible = true;
     m.userData.frozen = true;
+    world.desk.visible = false;      // картка впритул — прилавок би різав її навпіл
     m.position.set(SEAT.x, m.userData.baseY, SEAT.z - 0.95);
     m.rotation.set(0, 0, 0);
 
@@ -1021,7 +1026,7 @@
       ambient.intensity += (wantAmb - ambient.intensity) * Math.min(1, dt * 9);
     }
 
-    flashlight.intensity += ((G.flash && G.power > 0 && !G.camsUp ? 3.3 : 0) - flashlight.intensity) * Math.min(1, dt * 10);
+    flashlight.intensity += ((G.flash && G.power > 0 && !G.camsUp ? FLASH_I : 0) - flashlight.intensity) * Math.min(1, dt * 10);
     // ліхтар у руці — ледь помітно «дихає», інакше пляма мертва
     if (flashlight.intensity > 0.05) {
       flashlight.target.position.x = Math.sin(G.t * 0.7) * 0.10 + Math.sin(G.t * 2.3) * 0.03;
@@ -1249,6 +1254,7 @@
   function boot() {
     initGL();
     window.__G = G; window.__kill = kill;
+    window.__W = world; window.__cam = camera; window.__scene = scene;   // для налагодження
     initChars();
     initInput();
     camera.position.set(SEAT.x, EYE.sit, SEAT.z);

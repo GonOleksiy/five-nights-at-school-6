@@ -156,31 +156,178 @@
       }
     }, [12, 9]);
 
-    /* --- бук стола охорони --- */
+    /* --- бук стола охорони ---
+       Плитка = 0.55 м у світі (див. TILE). Тому волокна тут дрібні:
+       раніше текстура розтягувалась на всю грань і виходили широкі смуги. */
     TEX.wood = tex(256, 256, function (g, w, h) {
-      g.fillStyle = '#c2a070'; g.fillRect(0, 0, w, h);
-      for (var i = 0; i < 180; i++) {                       // волокна
-        g.globalAlpha = .04 + Math.random() * .13;
-        g.strokeStyle = Math.random() < .5 ? '#8a6336' : '#ddc196';
-        g.lineWidth = .4 + Math.random() * 2.4;
+      g.fillStyle = '#b39471'; g.fillRect(0, 0, w, h);
+      // м'який поздовжній перепад тону, щоб плитка не читалась як плитка
+      var gr = g.createLinearGradient(0, 0, 0, h);
+      gr.addColorStop(0, 'rgba(255,240,215,0.10)');
+      gr.addColorStop(0.45, 'rgba(0,0,0,0)');
+      gr.addColorStop(1, 'rgba(70,45,22,0.12)');
+      g.fillStyle = gr; g.fillRect(0, 0, w, h);
+      for (var i = 0; i < 260; i++) {                       // волокна
+        g.globalAlpha = .025 + Math.random() * .07;
+        g.strokeStyle = Math.random() < .5 ? '#8a6336' : '#d9c09a';
+        g.lineWidth = .35 + Math.random() * 1.1;
         var y = Math.random() * h;
         g.beginPath(); g.moveTo(0, y);
-        g.bezierCurveTo(w * .3, y + (Math.random() - .5) * 14,
-          w * .6, y + (Math.random() - .5) * 14, w, y + (Math.random() - .5) * 6);
+        g.bezierCurveTo(w * .3, y + (Math.random() - .5) * 5,
+          w * .6, y + (Math.random() - .5) * 5, w, y + (Math.random() - .5) * 2.5);
         g.stroke();
       }
       g.globalAlpha = 1;
-      for (var k = 0; k < 3; k++) {                         // сучки
+      for (var k = 0; k < 2; k++) {                         // сучки
         var kx = Math.random() * w, ky = Math.random() * h;
-        for (var r2 = 14; r2 > 0; r2 -= 2.5) {
-          g.globalAlpha = 0.12;
-          g.strokeStyle = '#7a5730'; g.lineWidth = 1.4;
-          g.beginPath(); g.ellipse(kx, ky, r2, r2 * 0.62, 0.6, 0, 6.3); g.stroke();
+        for (var r2 = 9; r2 > 0; r2 -= 2.0) {
+          g.globalAlpha = 0.09;
+          g.strokeStyle = '#7a5730'; g.lineWidth = 1.1;
+          g.beginPath(); g.ellipse(kx, ky, r2, r2 * 0.58, 0.6, 0, 6.3); g.stroke();
         }
       }
       g.globalAlpha = 1;
-      speckle(g, w, h, 300, ['#a8854f', '#e2caa2'], 0.03, 0.09, 3);
-    }, [2, 2]);
+      speckle(g, w, h, 220, ['#a8854f', '#cdb28c'], 0.02, 0.05, 2);
+    });
+
+    /* --- шкільне оголошення: пожовклий папір із друком ---
+       Чистий білий аркуш навпроти вікна вахти вигорав у ліхтарі
+       суцільною білою плямою. Тепер це папір з текстом і плямами. */
+    TEX.notice = tex(256, 256, function (g, w, h) {
+      g.fillStyle = '#8e8874'; g.fillRect(0, 0, w, h);
+      for (var s = 0; s < 7; s++) {                         // плями від вологи
+        var x0 = Math.random() * w, y0 = Math.random() * h;
+        var rg = g.createRadialGradient(x0, y0, 2, x0, y0, 20 + Math.random() * 45);
+        rg.addColorStop(0, 'rgba(120,102,62,0.28)');
+        rg.addColorStop(1, 'rgba(120,102,62,0)');
+        g.fillStyle = rg; g.beginPath(); g.arc(x0, y0, 70, 0, 6.3); g.fill();
+      }
+      g.fillStyle = '#3b3830';
+      g.fillRect(38, 26, w - 76, 9);                        // заголовок
+      g.fillRect(64, 42, w - 128, 5);
+      for (var i = 0; i < 16; i++) {                        // рядки тексту
+        g.globalAlpha = 0.55 + Math.random() * 0.3;
+        g.fillRect(30, 70 + i * 10, (w - 76) * (0.45 + Math.random() * 0.5), 3);
+      }
+      g.globalAlpha = 1;
+      g.strokeStyle = 'rgba(60,56,48,0.5)'; g.lineWidth = 2;
+      g.strokeRect(14, 12, w - 28, h - 24);
+      g.strokeStyle = 'rgba(80,40,40,0.35)'; g.lineWidth = 3; // печатка
+      g.beginPath(); g.arc(w - 58, h - 50, 26, 0, 6.3); g.stroke();
+      speckle(g, w, h, 260, ['#7c7663', '#a49b85'], 0.05, 0.16, 2);
+    });
+
+    /* --- пошарпаний лінолеум робочої поверхні --- */
+    TEX.deskTop = tex(256, 256, function (g, w, h) {
+      g.fillStyle = '#4b4741'; g.fillRect(0, 0, w, h);
+      speckle(g, w, h, 1400, ['#5d574e', '#3a362f', '#6a6157'], 0.10, 0.34, 2.0);
+      for (var i = 0; i < 26; i++) {                        // подряпини
+        g.globalAlpha = 0.05 + Math.random() * 0.10;
+        g.strokeStyle = '#8c8578'; g.lineWidth = 0.5 + Math.random();
+        var x = Math.random() * w, y = Math.random() * h, a = Math.random() * 6.3,
+          L = 12 + Math.random() * 60;
+        g.beginPath(); g.moveTo(x, y);
+        g.lineTo(x + Math.cos(a) * L, y + Math.sin(a) * L); g.stroke();
+      }
+      g.globalAlpha = 1;
+      for (var k = 0; k < 5; k++) {                         // сліди від чашок
+        g.globalAlpha = 0.07;
+        g.strokeStyle = '#2b2721'; g.lineWidth = 2.2;
+        g.beginPath();
+        g.arc(Math.random() * w, Math.random() * h, 11 + Math.random() * 7, 0, 6.3);
+        g.stroke();
+      }
+      g.globalAlpha = 1;
+    });
+  }
+
+  /* ============================================================
+     UV У СВІТОВИХ МЕТРАХ
+     Одна текстура на деталях різного розміру виглядає як різні
+     матеріали, якщо кожна грань отримує рівно одну плитку. Тому
+     UV перераховуються під фізичний розмір грані.
+     ============================================================ */
+  var TILE = 0.55;
+
+  function uvScale(geo, s) {
+    var uv = geo.attributes.uv;
+    for (var i = 0; i < uv.count; i++) uv.setXY(i, uv.getX(i) * s, uv.getY(i) * s);
+    uv.needsUpdate = true;
+    return geo;
+  }
+
+  /* грані BoxGeometry ідуть у порядку +X −X +Y −Y +Z −Z */
+  function uvBox(geo, w, h, d, tile) {
+    var t = tile || TILE, uv = geo.attributes.uv;
+    var f = [[d, h], [d, h], [w, d], [w, d], [w, h], [w, h]];
+    for (var i = 0; i < 6; i++) {
+      var su = f[i][0] / t, sv = f[i][1] / t;
+      for (var k = 0; k < 4; k++) {
+        var j = i * 4 + k;
+        uv.setXY(j, uv.getX(j) * su, uv.getY(j) * sv);
+      }
+    }
+    uv.needsUpdate = true;
+    return geo;
+  }
+
+  /* коробка з правильними UV */
+  function wbox(w, h, d, mat, x, y, z, ry, tile) {
+    var m = new T.Mesh(uvBox(new T.BoxGeometry(w, h, d), w, h, d, tile), mat);
+    m.position.set(x, y, z); if (ry) m.rotation.y = ry;
+    m.castShadow = true; m.receiveShadow = true;
+    return m;
+  }
+
+  /* контур, зсунутий «всередину» (у бік +Z) на d; кути зрізаються митрою,
+     тому сусідні грані сходяться, а не налазять одна на одну */
+  function inset(pts, d) {
+    function nrm(a, b) {
+      var tx = b[0] - a[0], tz = b[1] - a[1], L = Math.hypot(tx, tz) || 1;
+      return [tz / L, -tx / L];
+    }
+    var out = [];
+    for (var i = 0; i < pts.length; i++) {
+      var n1 = i > 0 ? nrm(pts[i - 1], pts[i]) : null;
+      var n2 = i < pts.length - 1 ? nrm(pts[i], pts[i + 1]) : null;
+      var nx, nz, sc = 1;
+      if (n1 && n2) {
+        nx = n1[0] + n2[0]; nz = n1[1] + n2[1];
+        var L = Math.hypot(nx, nz) || 1; nx /= L; nz /= L;
+        var dot = nx * n1[0] + nz * n1[1];
+        sc = dot > 0.25 ? 1 / dot : 1;
+      } else { var n = n1 || n2; nx = n[0]; nz = n[1]; }
+      out.push([pts[i][0] - nx * d * sc, pts[i][1] - nz * d * sc]);
+    }
+    return out;
+  }
+
+  function polyShape(pts) {
+    var s = new T.Shape();
+    s.moveTo(pts[0][0], pts[0][1]);
+    for (var i = 1; i < pts.length; i++) s.lineTo(pts[i][0], pts[i][1]);
+    s.closePath();
+    return s;
+  }
+
+  /* горизонтальна плита за контуром у плані, від y0 до y1 —
+     одна суцільна сітка замість купи коробок, що перетинаються */
+  function slabShape(pts, y0, y1, mat, tile) {
+    var geo = new T.ExtrudeGeometry(polyShape(pts),
+      { depth: y1 - y0, bevelEnabled: false, curveSegments: 1 });
+    uvScale(geo, 1 / (tile || TILE));
+    geo.rotateX(Math.PI / 2);
+    geo.translate(0, y1, 0);
+    var m = new T.Mesh(geo, mat);
+    m.castShadow = true; m.receiveShadow = true;
+    return m;
+  }
+
+  /* замкнене кільце: зовнішній контур + внутрішній, зсунутий на th */
+  function ringSlab(pts, th, y0, y1, mat, tile) {
+    var inn = inset(pts, th), poly = pts.slice();
+    for (var i = inn.length - 1; i >= 0; i--) poly.push(inn[i]);
+    return slabShape(poly, y0, y1, mat, tile);
   }
 
   /* ---------- матеріали ---------- */
@@ -192,13 +339,21 @@
     M.ceil = new T.MeshLambertMaterial({ map: TEX.ceil });
     M.wood = new T.MeshLambertMaterial({ map: TEX.wood });
     M.woodDark = new T.MeshLambertMaterial({ color: 0x8a6b45 });
+    /* стіл вахти: один малюнок дерева, три тони — світлий корпус,
+       темніша окантовка прилавка, зовсім темний цоколь */
+    M.dWood = new T.MeshLambertMaterial({ map: TEX.wood });
+    M.dWoodEdge = new T.MeshLambertMaterial({ map: TEX.wood, color: 0x8c7050 });
+    M.dWoodFoot = new T.MeshLambertMaterial({ map: TEX.wood, color: 0x5d4c39 });
+    M.dTop = new T.MeshLambertMaterial({ map: TEX.deskTop });
+    M.rubber = new T.MeshLambertMaterial({ color: 0x24262a });
     M.metal = new T.MeshLambertMaterial({ color: 0x44464a });
     M.dark = new T.MeshLambertMaterial({ color: 0x1b1c1f });
     M.door = new T.MeshLambertMaterial({ color: 0x6d3a2e });
     M.glass = new T.MeshLambertMaterial({ color: 0x9fd8e8, transparent: true, opacity: 0.12 });
     M.frame = new T.MeshLambertMaterial({ color: 0x2f3134 });
     M.screen = new T.MeshBasicMaterial({ color: 0x0b1a0d });
-    M.paper = new T.MeshLambertMaterial({ color: 0xd8d2c0 });
+    M.paper = new T.MeshLambertMaterial({ color: 0xbdb7a4 });
+    M.notice = new T.MeshLambertMaterial({ map: TEX.notice });
   }
 
   /* ---------- примітиви ---------- */
@@ -237,117 +392,173 @@
     }
   }
 
-  /* ---------- СТІЛ ОХОРОНИ (за фото: кутова рецепція, світлий бук) ---------- */
-  /* Контур прилавка (локально, обличчям у -Z). Кутові грані як на фото. */
+  /* ============================================================
+     СТІЛ ВАХТИ — місце, де сидить гравець
+     Локальні координати: обличчям у −Z, нуль — центр прилавка.
+     Гравець сидить позаду, у +Z (SEAT у game.js).
+     Правило складання: деталі СТИКАЮТЬСЯ або ховаються одна в одній
+     на сантиметр, але ніде не лежать двома поверхнями впритул —
+     інакше в русі вони блимають одна крізь одну.
+     ============================================================ */
   var DESK_PATH = [
     [-1.80, 0.10], [-1.18, -0.24], [-0.56, -0.50],
     [0.56, -0.50], [1.18, -0.24], [1.80, 0.10]
   ];
   var DESK = {
-    bodyH: 1.12,      // висота корпусу
-    capY: 1.18,      // стільниця-прилавок
-    privY: 1.50,      // верхня глуха панель (через неї сидячи не видно)
-    workY: 0.74,      // внутрішня робоча поверхня
-    back: 0.78       // задня глибина
+    bodyH: 1.13,     // корпус прилавка
+    capY: 1.185,    // окантовка згори
+    workY: 0.74,     // робоча поверхня
+    backZ: 0.42,     // задній край стільниці (до гравця)
+    kneeY: 0.70
   };
 
   function buildDesk() {
     var g = new T.Group();
     var P = DESK_PATH, i;
+    var WY = DESK.workY;
 
-    function seg(a, b, y0, y1, mat, thick) {
-      var dx = b[0] - a[0], dz = b[1] - a[1], len = Math.hypot(dx, dz);
-      var ang = Math.atan2(dx, dz) + Math.PI / 2;
-      var m = box(len, y1 - y0, thick || 0.06, mat,
-        (a[0] + b[0]) / 2, (y0 + y1) / 2, (a[1] + b[1]) / 2, -ang);
-      m.castShadow = true; m.receiveShadow = true;
-      return m;
-    }
+    /* ---------- прилавок ---------- */
+    g.add(ringSlab(inset(P, -0.012), 0.10, 0.0, 0.085, M.dWoodFoot));       // цоколь
+    g.add(ringSlab(P, 0.085, 0.085, DESK.bodyH, M.dWood));                  // корпус
+    g.add(ringSlab(inset(P, -0.035), 0.155, DESK.bodyH, DESK.capY, M.dWoodEdge)); // окантовка
 
-    // передні грані корпусу
-    for (i = 0; i < P.length - 1; i++) g.add(seg(P[i], P[i + 1], 0, DESK.bodyH, M.wood, 0.07));
-    // стільниця-прилавок (виступає назовні)
-    for (i = 0; i < P.length - 1; i++) {
-      var a = P[i], b = P[i + 1];
-      var dx = b[0] - a[0], dz = b[1] - a[1], len = Math.hypot(dx, dz);
-      var ang = Math.atan2(dx, dz) + Math.PI / 2;
-      var nx = Math.cos(ang) * 0.0, nz = 0;
-      var cap = box(len + 0.05, 0.055, 0.30, M.woodDark,
-        (a[0] + b[0]) / 2 - Math.sin(ang + Math.PI / 2) * 0.06,
-        DESK.capY,
-        (a[1] + b[1]) / 2 - Math.cos(ang + Math.PI / 2) * 0.06, -ang);
-      g.add(cap);
-      // глуха надбудова — саме вона закриває огляд сидячи
-      g.add(seg(a, b, DESK.capY + 0.03, DESK.privY, M.wood, 0.05));
-      var top = box(len + 0.04, 0.05, 0.16, M.woodDark,
-        (a[0] + b[0]) / 2, DESK.privY + 0.025, (a[1] + b[1]) / 2, -ang);
-      g.add(top);
-    }
+    /* бічні крила до стін ніші */
+    [-1, 1].forEach(function (s) {
+      g.add(wbox(0.085, DESK.bodyH - 0.085, 0.66, M.dWood,
+        s * 1.7575, 0.085 + (DESK.bodyH - 0.085) / 2, 0.43));
+      g.add(wbox(0.155, DESK.capY - DESK.bodyH, 0.66, M.dWoodEdge,
+        s * 1.7575, (DESK.bodyH + DESK.capY) / 2, 0.43));
+    });
 
-    // бічні поворотні крила (до стіни)
-    g.add(box(0.07, 0.88, DESK.back + 0.2, M.wood, -1.80, 0.44, 0.10 + (DESK.back + 0.2) / 2 - 0.1));
-    g.add(box(0.07, 0.88, DESK.back + 0.2, M.wood, 1.80, 0.44, 0.10 + (DESK.back + 0.2) / 2 - 0.1));
+    /* ---------- стільниця ----------
+       Один багатокутник: внутрішня лінія прилавка + прямий задній край.
+       Раніше тут лежала пряма коробка, і її кути проходили крізь
+       похилі грані прилавка. */
+    var wIn = inset(P, 0.06);
+    var poly = wIn.slice();
+    poly.push([wIn[wIn.length - 1][0], DESK.backZ]);
+    poly.push([wIn[0][0], DESK.backZ]);
+    g.add(slabShape(poly, WY - 0.045, WY, M.dTop, 0.70));
+    // гумовий кант заднього краю
+    var wL = wIn[0][0], wR = wIn[wIn.length - 1][0];
+    g.add(wbox(wR - wL, 0.05, 0.028, M.rubber, (wL + wR) / 2, WY - 0.021, DESK.backZ + 0.012));
 
-    // внутрішня робоча поверхня (стіл під моніторами)
-    var wsz = new T.Mesh(new T.BoxGeometry(3.45, 0.05, 0.62), M.woodDark);
-    wsz.position.set(0, DESK.workY, -0.12); wsz.receiveShadow = true; g.add(wsz);
-    // тумба праворуч (щоб ніша під столом була ліворуч-по центру)
-    g.add(box(0.55, DESK.workY - 0.06, 0.58, M.wood, 1.42, (DESK.workY - 0.06) / 2, -0.12));
-    // бічна тумба ліворуч
-    g.add(box(0.5, DESK.workY - 0.06, 0.58, M.wood, -1.48, (DESK.workY - 0.06) / 2, -0.12));
-    // задня стінка ніші — темна, щоб під столом було чорно
-    g.add(box(2.4, DESK.workY, 0.05, M.dark, 0, DESK.workY / 2, 0.16));
+    /* ---------- тумби й коліна ---------- */
+    [-1.42, 1.42].forEach(function (x) {
+      g.add(wbox(0.44, WY - 0.09, 0.46, M.dWood, x, 0.045 + (WY - 0.09) / 2, 0.17));
+      g.add(wbox(0.46, 0.045, 0.48, M.dWoodFoot, x, 0.0225, 0.17));         // цоколь тумби
+      // три шухляди — лицьові планки з ручками
+      for (i = 0; i < 3; i++) {
+        var dy = 0.17 + i * 0.19;
+        g.add(wbox(0.40, 0.165, 0.02, M.dWoodEdge, x, dy, 0.395));
+        g.add(wbox(0.13, 0.016, 0.02, M.metal, x, dy + 0.055, 0.408));
+      }
+    });
+    // глуха панель перед колінами: під столом має бути темно
+    g.add(wbox(2.34, DESK.kneeY, 0.04, M.dark, 0, DESK.kneeY / 2, -0.02));
+    // полиця під стільницею + кабель-канал
+    g.add(wbox(1.9, 0.03, 0.22, M.dark, 0, WY - 0.20, 0.30));
+    g.add(wbox(1.5, 0.05, 0.07, M.rubber, 0, WY - 0.095, 0.36));
 
-    // ---- монітори (3 шт., як на пульті охорони) ----
+    /* ---------- монітори ---------- */
     var screens = [];
     function monitor(x, z, ry, w, h) {
       var mg = new T.Group();
-      mg.add(box(w + 0.05, h + 0.05, 0.05, M.frame, 0, h / 2 + 0.16, 0));
-      mg.add(box(0.1, 0.16, 0.1, M.frame, 0, 0.08, 0.02));
-      mg.add(box(0.28, 0.03, 0.2, M.frame, 0, 0.015, 0.02));
+      var cy = h / 2 + 0.185;
+      mg.add(wbox(w + 0.045, h + 0.045, 0.035, M.frame, 0, cy, 0, 0, 0.3));  // рамка
+      mg.add(wbox(w + 0.02, h + 0.02, 0.05, M.dark, 0, cy, -0.028, 0, 0.3)); // корпус ззаду
+      mg.add(wbox(0.085, 0.20, 0.075, M.frame, 0, 0.09, 0.015, 0, 0.3));     // ніжка
+      mg.add(wbox(0.26, 0.022, 0.19, M.frame, 0, 0.011, 0.015, 0, 0.3));     // підставка
       var sc = new T.Mesh(new T.PlaneGeometry(w, h), M.screen.clone());
-      sc.position.set(0, h / 2 + 0.16, 0.030);
+      sc.position.set(0, cy, 0.019);
       mg.add(sc); screens.push(sc);
-      mg.position.set(x, DESK.workY + 0.025, z);
+      // шлейф від монітора вниз, за стільницю
+      var cb = new T.Mesh(new T.CylinderGeometry(0.007, 0.007, 0.26, 5), M.rubber);
+      cb.position.set(0.05, 0.13, -0.06); cb.rotation.x = 0.4; mg.add(cb);
+      mg.position.set(x, WY, z);
       mg.rotation.y = ry;
       return mg;
     }
-    g.add(monitor(-0.74, -0.28, 0.34, 0.50, 0.33));
-    g.add(monitor(0.00, -0.34, 0.00, 0.66, 0.42));   // центральний — головний фід
-    g.add(monitor(0.74, -0.28, -0.34, 0.50, 0.33));
+    g.add(monitor(-0.76, -0.20, 0.32, 0.50, 0.33));
+    g.add(monitor(0.00, -0.26, 0.00, 0.66, 0.42));   // центральний — головний фід
+    g.add(monitor(0.76, -0.20, -0.32, 0.50, 0.33));
 
-    // ---- дріб'язок ----
-    g.add(box(0.44, 0.02, 0.17, M.dark, 0, DESK.workY + 0.035, 0.03));        // клавіатура
-    g.add(box(0.07, 0.025, 0.11, M.dark, 0.30, DESK.workY + 0.04, 0.03));     // миша
-    var mug = new T.Mesh(new T.CylinderGeometry(0.045, 0.04, 0.1, 10), M.paper);
-    mug.position.set(-0.52, DESK.workY + 0.075, 0.02); g.add(mug);
-    var jrn = box(0.3, 0.03, 0.22, M.paper, 0.62, DESK.workY + 0.04, 0.02, 0.18);
+    /* ---------- дрібниця на стільниці ---------- */
+    var TY = WY + 0.001;
+    // килимок, клавіатура, миша
+    g.add(wbox(0.52, 0.004, 0.24, M.rubber, -0.02, TY, 0.12, 0, 0.3));
+    g.add(wbox(0.44, 0.022, 0.16, M.dark, -0.02, TY + 0.013, 0.12, 0.03, 0.3));
+    g.add(wbox(0.20, 0.004, 0.17, M.rubber, 0.36, TY, 0.13, 0, 0.3));
+    var mouse = new T.Mesh(new T.SphereGeometry(0.045, 8, 6), M.dark);
+    mouse.scale.set(0.75, 0.42, 1.15); mouse.position.set(0.36, TY + 0.019, 0.13);
+    g.add(mouse);
+    // кружка з ручкою
+    var mug = new T.Mesh(new T.CylinderGeometry(0.043, 0.038, 0.095, 12), M.paper);
+    mug.position.set(-0.60, TY + 0.048, 0.20); g.add(mug);
+    var handle = new T.Mesh(new T.TorusGeometry(0.030, 0.007, 5, 10, Math.PI * 1.1), M.paper);
+    handle.position.set(-0.645, TY + 0.050, 0.20);
+    handle.rotation.y = Math.PI / 2; handle.rotation.z = -0.4; g.add(handle);
+    // склянка з ручками
+    var cup = new T.Mesh(new T.CylinderGeometry(0.038, 0.032, 0.10, 10), M.metal);
+    cup.position.set(0.62, TY + 0.05, 0.05); g.add(cup);
+    [[0.01, 0.2], [-0.015, -0.3], [0.02, 0.05]].forEach(function (p) {
+      var pen = new T.Mesh(new T.CylinderGeometry(0.005, 0.005, 0.16, 5),
+        new T.MeshLambertMaterial({ color: p[1] > 0 ? 0x1f4f8c : 0x8c2118 }));
+      pen.position.set(0.62 + p[0], TY + 0.11, 0.05 + p[1] * 0.04);
+      pen.rotation.z = p[1] * 0.5; g.add(pen);
+    });
+    // журнал чергувань, розгорнутий
+    var jrn = wbox(0.34, 0.028, 0.25, M.paper, -1.00, TY + 0.014, 0.12, 0.14, 0.3);
     g.add(jrn);
-    // настільна лампа
-    var base = new T.Mesh(new T.CylinderGeometry(0.075, 0.085, 0.022, 12), M.metal);
-    base.position.set(-1.34, DESK.workY + 0.036, -0.06); g.add(base);
-    var lampArm = box(0.022, 0.30, 0.022, M.metal, -1.34, DESK.workY + 0.19, -0.06);
-    lampArm.rotation.z = -0.12; g.add(lampArm);
-    var lampHead = new T.Mesh(new T.ConeGeometry(0.075, 0.09, 10), M.metal);
-    lampHead.position.set(-1.30, DESK.workY + 0.345, -0.09);
-    lampHead.rotation.x = 0.55; g.add(lampHead);
+    g.add(wbox(0.36, 0.012, 0.27, M.woodDark, -1.00, TY + 0.005, 0.12, 0.14, 0.3));
+    // стос паперів
+    g.add(wbox(0.21, 0.035, 0.29, M.paper, 0.98, TY + 0.018, 0.22, -0.10, 0.3));
+    // телефон
+    g.add(wbox(0.20, 0.055, 0.15, M.dark, 1.36, TY + 0.028, 0.16, 0.22, 0.3));
+    g.add(wbox(0.17, 0.045, 0.055, M.dark, 1.345, TY + 0.075, 0.115, 0.22, 0.3));
+    var cord = new T.Mesh(new T.TorusGeometry(0.05, 0.006, 4, 10), M.dark);
+    cord.position.set(1.36, TY + 0.006, 0.30); cord.rotation.x = Math.PI / 2; g.add(cord);
+    // чайник
+    var kettle = new T.Mesh(new T.CylinderGeometry(0.072, 0.082, 0.17, 12), M.metal);
+    kettle.position.set(-1.40, TY + 0.085, 0.22); g.add(kettle);
+    g.add(wbox(0.16, 0.012, 0.16, M.dark, -1.40, TY + 0.176, 0.22, 0, 0.3));
+    g.add(wbox(0.028, 0.085, 0.028, M.dark, -1.30, TY + 0.085, 0.22, 0.4, 0.3));
 
-    // ---- стілець охоронця ----
+    /* настільна лампа */
+    var base = new T.Mesh(new T.CylinderGeometry(0.072, 0.082, 0.020, 14), M.metal);
+    base.position.set(-1.30, TY + 0.010, -0.05); g.add(base);
+    var arm = wbox(0.020, 0.30, 0.020, M.metal, -1.285, TY + 0.165, -0.06, 0, 0.3);
+    arm.rotation.z = -0.14; g.add(arm);
+    var head = new T.Mesh(new T.ConeGeometry(0.072, 0.085, 12, 1, true), M.metal);
+    head.position.set(-1.245, TY + 0.312, -0.09);
+    head.rotation.x = 0.60; head.rotation.z = 0.20; g.add(head);
+    var bulb = new T.Mesh(new T.SphereGeometry(0.022, 6, 5),
+      new T.MeshBasicMaterial({ color: 0xffd9a0 }));
+    bulb.position.set(-1.250, TY + 0.288, -0.075); g.add(bulb);
+
+    /* ---------- стілець ---------- */
     var ch = new T.Group();
-    ch.add(box(0.46, 0.06, 0.44, M.dark, 0, 0.46, 0));
-    ch.add(box(0.44, 0.5, 0.06, M.dark, 0, 0.74, 0.21));
-    ch.add(box(0.07, 0.42, 0.07, M.metal, 0, 0.22, 0));
+    ch.add(wbox(0.46, 0.065, 0.44, M.dark, 0, 0.455, 0, 0, 0.3));
+    ch.add(wbox(0.44, 0.48, 0.055, M.dark, 0, 0.745, 0.215, 0, 0.3));
+    ch.add(wbox(0.055, 0.16, 0.055, M.metal, -0.16, 0.565, 0.195, 0, 0.3));
+    ch.add(wbox(0.055, 0.16, 0.055, M.metal, 0.16, 0.565, 0.195, 0, 0.3));
+    var pole = new T.Mesh(new T.CylinderGeometry(0.032, 0.038, 0.40, 8), M.metal);
+    pole.position.y = 0.22; ch.add(pole);
     for (var k = 0; k < 5; k++) {
       var an = k / 5 * Math.PI * 2;
-      ch.add(box(0.26, 0.04, 0.05, M.metal, Math.sin(an) * 0.13, 0.04, Math.cos(an) * 0.13, an));
+      ch.add(wbox(0.26, 0.035, 0.05, M.metal,
+        Math.sin(an) * 0.13, 0.045, Math.cos(an) * 0.13, an, 0.3));
+      var wheel = new T.Mesh(new T.CylinderGeometry(0.028, 0.028, 0.022, 8), M.rubber);
+      wheel.position.set(Math.sin(an) * 0.245, 0.028, Math.cos(an) * 0.245);
+      wheel.rotation.z = Math.PI / 2; wheel.rotation.y = an; ch.add(wheel);
     }
-    ch.position.set(0, 0, 0.74);
+    ch.position.set(0.05, 0, 0.78);
+    ch.rotation.y = -0.08;
     g.add(ch);
 
     g.userData.screens = screens;
     return g;
   }
-
   /* ---------- світло коридорів ---------- */
   function lamp(g, x, z, lights, on) {
     var body = box(1.2, 0.09, 0.22, M.metal, x, 2.86, z);
@@ -441,8 +652,11 @@
     slab(OX0, OZ, OX1, CZ0, 2.55, M.ceil, false);
     // світло в ніші — тьмяна лампа над головою
     var deskLight = new T.PointLight(0xffc98a, 0.55, 4.2, 2);
-    deskLight.position.set(0, 2.3, -6.4); g.add(deskLight);
-    g.add(box(0.5, 0.06, 0.2, M.metal, 0, 2.45, -6.4));
+    deskLight.position.set(0, 2.3, -6.55); g.add(deskLight);
+    g.add(box(0.5, 0.06, 0.2, M.metal, 0, 2.45, -6.55));
+    // тепла пляма від настільної лампи — щоб робоче місце мало свій центр
+    var lampGlow = new T.PointLight(0xffb867, 0.62, 1.9, 2);
+    lampGlow.position.set(-1.25, 1.00, -6.88); g.add(lampGlow);
 
     /* --- сходи на 2-й поверх (жовте) --- */
     function stairs(x, z, dir) {
@@ -483,7 +697,7 @@
     }
     /* дошка оголошень + портрети — щоб коридор не був пустий */
     for (var i4 = 0; i4 < 5; i4++) {
-      g.add(box(0.7, 0.9, 0.04, M.paper, -9 + i4 * 4.4, 1.9, -8.55));
+      g.add(box(0.7, 0.9, 0.04, M.notice, -9 + i4 * 4.4, 1.9, -8.55));
       g.add(box(0.76, 0.96, 0.02, M.woodDark, -9 + i4 * 4.4, 1.9, -8.57));
     }
     /* план евакуації — зелена табличка, впізнавана деталь школи */
@@ -504,42 +718,41 @@
       g.add(box(0.05, 0.10, 0.05, M.metal, p[0], 0.90, p[1]));
     });
 
-    /* ---------- реквізит у ніші охорони ---------- */
+    /* ---------- реквізит у ніші охорони ----------
+       Усе, що лежить на столі, тепер належить самому столу (buildDesk).
+       Тут лишається тільки те, що висить на СТІНАХ. Бічні стіни ніші —
+       це дверні прорізи, тому вішати можна лише на фронт (обабіч
+       прилавка) та на глуху задню стіну. */
     (function () {
-      var paperM = M.paper, metalM = M.metal, darkM = M.dark;
-      // графік чергувань на лівій стіні ніші
-      var sched = box(0.02, 0.46, 0.34, paperM, -2.12, 1.62, -6.20);
-      g.add(sched);
-      g.add(box(0.01, 0.50, 0.38, M.woodDark, -2.14, 1.62, -6.20));
-      // ключниця з ключами на правій стіні
-      g.add(box(0.03, 0.30, 0.40, M.woodDark, 2.12, 1.55, -6.20));
-      for (var k = 0; k < 6; k++) {
-        g.add(box(0.012, 0.11, 0.025, metalM, 2.09, 1.46, -6.36 + k * 0.064));
+      var darkM = M.dark;
+      // графік чергувань — на фронті ліворуч від прилавка, лицем до гравця
+      g.add(box(0.52, 0.40, 0.02, M.woodDark, -1.58, 1.82, OZ + 0.08));
+      g.add(box(0.46, 0.34, 0.01, M.notice, -1.58, 1.82, OZ + 0.095));
+      // ключниця — на фронті праворуч
+      g.add(box(0.44, 0.34, 0.03, M.woodDark, 1.58, 1.76, OZ + 0.085));
+      for (var k = 0; k < 7; k++) {
+        g.add(box(0.012, 0.10, 0.022, M.metal, 1.40 + k * 0.058, 1.68, OZ + 0.102));
       }
-      // старий телефон на тумбі
-      g.add(box(0.20, 0.07, 0.15, darkM, 1.30, 0.775, -6.30));
-      g.add(box(0.17, 0.05, 0.06, darkM, 1.30, 0.825, -6.36));
-      // чайник і склянка
-      var kettle = new T.Mesh(new T.CylinderGeometry(0.075, 0.085, 0.17, 10), metalM);
-      kettle.position.set(-1.46, 0.845, -6.30); g.add(kettle);
-      g.add(box(0.03, 0.09, 0.03, darkM, -1.37, 0.845, -6.30));
-      // стос паперів і ручка
-      g.add(box(0.21, 0.035, 0.29, paperM, -0.95, 0.775, -6.22, 0.12));
-      g.add(box(0.012, 0.012, 0.13, new T.MeshLambertMaterial({ color: 0x1f4f8c }),
-        -0.90, 0.796, -6.16, 0.5));
+      // план евакуації над ключницею
+      g.add(box(0.40, 0.28, 0.02, new T.MeshLambertMaterial({ color: 0x2f6b46 }),
+        1.58, 2.16, OZ + 0.08));
       // радіоточка під стелею
-      g.add(box(0.26, 0.16, 0.09, M.woodDark, 1.75, 2.10, -6.62));
+      g.add(box(0.26, 0.16, 0.09, M.woodDark, 1.80, 2.18, CZ0 - 0.10));
       for (var v = 0; v < 5; v++) {
-        g.add(box(0.20, 0.012, 0.01, darkM, 1.75, 2.14 - v * 0.018, -6.575));
+        g.add(box(0.20, 0.012, 0.01, darkM, 1.80, 2.22 - v * 0.018, CZ0 - 0.152));
       }
+      // щиток і кабелі на задній стіні
+      g.add(box(0.34, 0.44, 0.10, M.metal, -1.70, 1.70, CZ0 - 0.10));
+      [[-1.70, -0.9], [-1.55, -0.6]].forEach(function (p) {
+        var c1 = new T.Mesh(new T.CylinderGeometry(0.009, 0.009, 1.05, 6), darkM);
+        c1.position.set(p[0], 0.95, CZ0 - 0.09);
+        c1.rotation.z = p[1] * 0.06; g.add(c1);
+      });
       // кабелі, що звисають зі стелі
       [[-0.6, -6.5], [0.7, -6.4]].forEach(function (p) {
-        var c1 = new T.Mesh(new T.CylinderGeometry(0.008, 0.008, 0.34, 6), darkM);
-        c1.position.set(p[0], 2.38, p[1]); c1.rotation.z = 0.25; g.add(c1);
+        var c2 = new T.Mesh(new T.CylinderGeometry(0.008, 0.008, 0.34, 6), darkM);
+        c2.position.set(p[0], 2.38, p[1]); c2.rotation.z = 0.25; g.add(c2);
       });
-      // кружка з написом на прилавку (видно, коли встаєш)
-      var mug2 = new T.Mesh(new T.CylinderGeometry(0.048, 0.042, 0.10, 12), paperM);
-      mug2.position.set(0.85, 1.24, -6.70); g.add(mug2);
     })();
 
     /* --- лампи --- */
@@ -564,7 +777,7 @@
 
     /* --- стіл охорони --- */
     var desk = buildDesk();
-    desk.position.set(0, 0, -6.55);
+    desk.position.set(0, 0, -6.77);   /* прилавок майже впритул до фронту ніші */
     g.add(desk);
 
     return {
