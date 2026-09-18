@@ -94,11 +94,11 @@
   };
 
   /* ---------- three ---------- */
-  var renderer, scene, camera, camCam, rt, world, flashlight, ambient, shutters = {}, shakeSeed = 0;
+  var renderer, scene, camera, camCam, rt, world, flashlight, ambient, shutters = {}, shakeSeed = 0, camIR;
   /* Камери — нічного бачення: у темряві вони бачать те, чого не бачить око.
      Це і робить планшет вартим свого заряду, і пояснює, чому Столову
      видно тільки на CAM 05. */
-  var AMB_DARK = 0.085, AMB_CAM = 0.62;
+  var AMB_DARK = 0.085, AMB_CAM = 0.30;
   var FLASH_I = 2.3;          /* яскравість ліхтаря; вище — біліють ближні стіни */
   var PIX = 0.58;
 
@@ -119,6 +119,11 @@
     camera = new T.PerspectiveCamera(60, 1, 0.05, 90);
     camera.rotation.order = 'YXZ';
     camCam = new T.PerspectiveCamera(78, 4 / 3, 0.05, 70);
+    /* ІЧ-підсвітка камери. Рівне світло на всю школу робило картинку
+       пласкою білою кашею; тепер коридор гасне вглиб, як на справжньому
+       нічному відео. */
+    camIR = new T.PointLight(0xa8d8b4, 0, 17, 1.35);
+    scene.add(camIR);
 
     rt = new T.WebGLRenderTarget(320, 240);
 
@@ -756,6 +761,7 @@
     elCamTitle.textContent = c.id + ' — ' + c.name;
     camCam.position.set(c.pos[0], c.pos[1], c.pos[2]);
     camCam.lookAt(c.look[0], c.look[1], c.look[2]);
+    camIR.position.set(c.pos[0], c.pos[1] - 0.1, c.pos[2]);
     S.sfx.camStatic();
     elCams.querySelectorAll('.cbtn').forEach(function (b, k) { b.classList.toggle('on', k === i); });
   }
@@ -1024,6 +1030,7 @@
     if (ambient) {
       var wantAmb = G.camsUp ? AMB_CAM : AMB_DARK;
       ambient.intensity += (wantAmb - ambient.intensity) * Math.min(1, dt * 9);
+      camIR.intensity += ((G.camsUp ? 1.30 : 0) - camIR.intensity) * Math.min(1, dt * 9);
     }
 
     flashlight.intensity += ((G.flash && G.power > 0 && !G.camsUp ? FLASH_I : 0) - flashlight.intensity) * Math.min(1, dt * 10);
@@ -1255,6 +1262,7 @@
     initGL();
     window.__G = G; window.__kill = kill;
     window.__W = world; window.__cam = camera; window.__scene = scene;   // для налагодження
+    window.__R = renderer;
     initChars();
     initInput();
     camera.position.set(SEAT.x, EYE.sit, SEAT.z);

@@ -217,6 +217,76 @@
       speckle(g, w, h, 260, ['#7c7663', '#a49b85'], 0.05, 0.16, 2);
     });
 
+    /* --- дверцята шкільної шафки: фарбований метал, дві стулки --- */
+    TEX.lockDoor = tex(256, 256, function (g, w, h) {
+      g.fillStyle = '#3f5b56'; g.fillRect(0, 0, w, h);
+      speckle(g, w, h, 700, ['#365049', '#4a6a63', '#2c403b'], 0.05, 0.18, 7);
+      // шов між стулками + рамки
+      g.strokeStyle = 'rgba(14,20,19,0.85)'; g.lineWidth = 3;
+      g.beginPath(); g.moveTo(w / 2, 0); g.lineTo(w / 2, h); g.stroke();
+      g.lineWidth = 2;
+      [0, 1].forEach(function (s) {
+        var x0 = s * w / 2 + 8, ww = w / 2 - 16;
+        g.strokeRect(x0, 10, ww, h - 20);
+        // жалюзі вентиляції вгорі
+        g.fillStyle = 'rgba(10,15,14,0.75)';
+        for (var v = 0; v < 5; v++) g.fillRect(x0 + ww * 0.22, 26 + v * 10, ww * 0.56, 4);
+        // номерок
+        g.fillStyle = 'rgba(212,206,186,0.80)';
+        g.fillRect(x0 + ww * 0.32, 96, ww * 0.36, 20);
+        g.fillStyle = '#20282a';
+        g.fillRect(x0 + ww * 0.39, 102, ww * 0.06, 9);
+        g.fillRect(x0 + ww * 0.50, 102, ww * 0.06, 9);
+        // ручка-скоба й личинка замка
+        g.fillStyle = '#8d8e86';
+        g.fillRect(x0 + ww * (s ? 0.10 : 0.78), h * 0.52, ww * 0.12, 26);
+        g.fillStyle = '#20282a';
+        g.beginPath(); g.arc(x0 + ww * (s ? 0.16 : 0.84), h * 0.62, 4, 0, 6.3); g.fill();
+      });
+      // подряпини й відколи фарби
+      for (var i = 0; i < 34; i++) {
+        g.globalAlpha = 0.10 + Math.random() * 0.25;
+        g.fillStyle = Math.random() < 0.5 ? '#9aa39b' : '#1d2724';
+        g.beginPath();
+        g.ellipse(Math.random() * w, Math.random() * h, 1 + Math.random() * 6, 1 + Math.random() * 3,
+          Math.random() * 3, 0, 6.3);
+        g.fill();
+      }
+      g.globalAlpha = 1;
+      var gr = g.createLinearGradient(0, 0, 0, h);
+      gr.addColorStop(0, 'rgba(255,255,230,0.05)');
+      gr.addColorStop(1, 'rgba(0,0,0,0.30)');
+      g.fillStyle = gr; g.fillRect(0, 0, w, h);
+    });
+
+    /* --- шкільні двері: фарбоване дерево, фільонки, скло вгорі --- */
+    TEX.door = tex(256, 256, function (g, w, h) {
+      g.fillStyle = '#6d3a2e'; g.fillRect(0, 0, w, h);
+      speckle(g, w, h, 500, ['#7d4536', '#5b2f25', '#8b5140'], 0.05, 0.16, 8);
+      g.strokeStyle = 'rgba(28,14,10,0.9)'; g.lineWidth = 4;
+      g.beginPath(); g.moveTo(w / 2, 0); g.lineTo(w / 2, h); g.stroke();
+      [0, 1].forEach(function (s) {
+        var x0 = s * w / 2;
+        // матове скло у верхній третині
+        g.fillStyle = 'rgba(150,170,160,0.30)';
+        g.fillRect(x0 + 18, 22, w / 2 - 36, 74);
+        g.strokeStyle = 'rgba(28,14,10,0.85)'; g.lineWidth = 3;
+        g.strokeRect(x0 + 18, 22, w / 2 - 36, 74);
+        // фільонки
+        g.strokeRect(x0 + 18, 112, w / 2 - 36, 54);
+        g.strokeRect(x0 + 18, 178, w / 2 - 36, 60);
+        // ручка
+        g.fillStyle = '#9a9384';
+        g.fillRect(x0 + (s ? 14 : w / 2 - 26), 132, 12, 26);
+      });
+      for (var i = 0; i < 20; i++) {                       // потертості
+        g.globalAlpha = 0.08 + Math.random() * 0.2;
+        g.fillStyle = Math.random() < 0.5 ? '#c09a84' : '#2a1510';
+        g.fillRect(Math.random() * w, Math.random() * h, 1 + Math.random() * 9, 1 + Math.random() * 3);
+      }
+      g.globalAlpha = 1;
+    });
+
     /* --- пошарпаний лінолеум робочої поверхні --- */
     TEX.deskTop = tex(256, 256, function (g, w, h) {
       g.fillStyle = '#4b4741'; g.fillRect(0, 0, w, h);
@@ -348,7 +418,12 @@
     M.rubber = new T.MeshLambertMaterial({ color: 0x24262a });
     M.metal = new T.MeshLambertMaterial({ color: 0x44464a });
     M.dark = new T.MeshLambertMaterial({ color: 0x1b1c1f });
-    M.door = new T.MeshLambertMaterial({ color: 0x6d3a2e });
+    M.door = new T.MeshLambertMaterial({ map: TEX.door });
+    M.doorEdge = new T.MeshLambertMaterial({ color: 0x4e2920 });
+    M.lockDoor = new T.MeshLambertMaterial({ map: TEX.lockDoor });
+    M.lockSide = new T.MeshLambertMaterial({ color: 0x33463f });
+    M.lockTop = new T.MeshLambertMaterial({ color: 0x28332e });
+    M.radi = new T.MeshLambertMaterial({ color: 0x8e948a });
     M.glass = new T.MeshLambertMaterial({ color: 0x9fd8e8, transparent: true, opacity: 0.12 });
     M.frame = new T.MeshLambertMaterial({ color: 0x2f3134 });
     M.screen = new T.MeshBasicMaterial({ color: 0x0b1a0d });
@@ -559,6 +634,40 @@
     g.userData.screens = screens;
     return g;
   }
+  /* ---------- меблі коридорів ----------
+     Шафка: малюнок дверцят лежить ТІЛЬКИ на лицьовій грані. Якщо дати
+     всій коробці одну текстуру, дверцята розтягуються на боки й на дах,
+     а згори (з камери під стелею) це видно найбільше. */
+  function lockerUnit(x, z, ry) {
+    var W_ = 0.82, H_ = 1.80, D_ = 0.42;
+    var grp = new T.Group();
+    var m = new T.Mesh(new T.BoxGeometry(W_, H_, D_),
+      [M.lockSide, M.lockSide, M.lockTop, M.lockTop, M.lockDoor, M.lockSide]);
+    m.position.y = 0.10 + H_ / 2;
+    m.castShadow = true; m.receiveShadow = true;
+    grp.add(m);
+    grp.add(box(W_ + 0.02, 0.10, D_ + 0.03, M.lockTop, 0, 0.05, 0));            // цоколь
+    grp.add(box(W_ + 0.05, 0.05, D_ + 0.07, M.lockSide, 0, 0.10 + H_ + 0.02, 0)); // карниз
+    grp.position.set(x, 0, z);
+    if (ry) grp.rotation.y = ry;
+    return grp;
+  }
+
+  /* чавунна батарея під вікном — секціями, а не однією плитою */
+  function radiator(x, z, ry) {
+    var grp = new T.Group(), i;
+    for (i = 0; i < 12; i++) {
+      grp.add(box(0.050, 0.48, 0.115, M.radi, -0.33 + i * 0.060, 0.50, 0));
+    }
+    grp.add(box(0.78, 0.045, 0.095, M.radi, 0, 0.752, 0));
+    grp.add(box(0.78, 0.045, 0.095, M.radi, 0, 0.248, 0));
+    grp.add(box(0.034, 0.26, 0.034, M.metal, 0.42, 0.34, 0));
+    grp.add(box(0.034, 0.10, 0.034, M.metal, -0.42, 0.80, 0));
+    grp.position.set(x, 0, z);
+    if (ry) grp.rotation.y = ry;
+    return grp;
+  }
+
   /* ---------- світло коридорів ---------- */
   function lamp(g, x, z, lights, on) {
     var body = box(1.2, 0.09, 0.22, M.metal, x, 2.86, z);
@@ -677,7 +786,7 @@
     for (var r = 0; r < 4; r++) {
       for (var c = 0; c < 5; c++) {
         var tx = -8.4 + c * 4.2, tz = -3.4 + r * 3.1;
-        var tt = box(1.5, 0.07, 0.75, M.woodDark, tx, 0.74, tz); g.add(tt);
+        var tt = wbox(1.5, 0.07, 0.75, M.dTop, tx, 0.74, tz, 0, 0.70); g.add(tt);
         [[-0.65, -0.3], [0.65, -0.3], [-0.65, 0.3], [0.65, 0.3]].forEach(function (p) {
           g.add(box(0.06, 0.74, 0.06, M.metal, tx + p[0], 0.37, tz + p[1]));
         });
@@ -685,15 +794,15 @@
         g.add(box(0.38, 0.04, 0.38, M.woodDark, tx + 0.5, 0.45, tz - 0.75));
       }
     }
-    /* шафки в коридорах */
+    /* шафки в коридорах — лицем у коридор */
     for (var i2 = 0; i2 < 9; i2++) {
-      g.add(box(0.8, 1.9, 0.42, M.woodDark, -13.8 + i2 * 1.0, 0.95, -8.45));
-      g.add(box(0.8, 1.9, 0.42, M.woodDark, 5.6 + i2 * 1.0, 0.95, -8.45));
+      g.add(lockerUnit(-13.8 + i2 * 0.88, -8.42));
+      g.add(lockerUnit(5.6 + i2 * 0.88, -8.42));
     }
-    /* радіатори */
+    /* радіатори на бічних стінах */
     for (var i3 = 0; i3 < 6; i3++) {
-      g.add(box(0.9, 0.55, 0.12, M.metal, -15.2, 0.5, -4.0 + i3 * 2.2, Math.PI / 2));
-      g.add(box(0.9, 0.55, 0.12, M.metal, 15.2, 0.5, -4.0 + i3 * 2.2, Math.PI / 2));
+      g.add(radiator(-15.20, -4.0 + i3 * 2.2, Math.PI / 2));
+      g.add(radiator(15.20, -4.0 + i3 * 2.2, -Math.PI / 2));
     }
     /* дошка оголошень + портрети — щоб коридор не був пустий */
     for (var i4 = 0; i4 < 5; i4++) {
