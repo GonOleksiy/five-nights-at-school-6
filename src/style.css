@@ -126,8 +126,11 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;font-family:var
 #perk small{display:block;color:var(--bone);opacity:.7;letter-spacing:1px;font-size:13px;margin-top:6px}
 
 /* ---------- екрани ---------- */
-.screen{position:fixed;inset:0;z-index:20;background:#060607;display:flex;align-items:center;justify-content:center}
-.m-wrap{width:min(860px,92vw);text-align:center}
+/* margin:auto замість align-items:center — інакше на низькому вікні
+   верх екрана (заголовок «ХТО ЗНАЙШОВ ТЕБЕ») зрізається, і до нього
+   вже не доскролиш */
+.screen{position:fixed;inset:0;z-index:20;background:#060607;display:flex;overflow:auto;padding:22px 12px}
+.m-wrap{width:min(860px,92vw);text-align:center;margin:auto}
 
 #menu h1{font-size:clamp(38px,7.6vw,86px);font-weight:700;letter-spacing:4px;line-height:1}
 #menu h1 span{color:var(--blood);text-shadow:0 0 40px rgba(140,28,19,.8)}
@@ -215,3 +218,29 @@ body.camsup #power-box{bottom:auto;top:78px;left:26px}
 #menu .sub,#menu .tiny{text-shadow:0 2px 12px #000}
 #menu button{background:rgba(8,8,10,.55);backdrop-filter:blur(2px)}
 #menu button:hover{background:var(--bone);color:#0a0a0c}
+
+/* ---------- низьке вікно ----------
+   На ноутбуці з панелями екран смерті й меню не вміщались по висоті. */
+@media (max-height:660px){
+  #menu h1{font-size:clamp(26px,5.4vw,52px)}
+  #menu .sub{font-size:14px;margin-top:6px}
+  .m-btns{margin:22px 0 12px;gap:9px}
+  button{padding:10px 30px;font-size:15px;letter-spacing:4px}
+  .tiny{margin-top:16px}
+  .over h2{font-size:30px;letter-spacing:4px}
+  #over-story{font-size:17px;line-height:1.5;margin:16px auto 22px;min-height:0}
+  #win-time{font-size:62px}
+  #win-title{font-size:20px;letter-spacing:6px}
+  #win-text{font-size:16px;margin:16px 0 22px}
+  .howto h2{font-size:24px;margin-bottom:12px}
+  .howto h3{font-size:14px;margin:16px 0 8px}
+  .howto ul{font-size:14px;line-height:1.6}
+  .howto button{margin-top:18px}
+  .brief .phone{padding:20px}
+  #brief-text{font-size:16px;line-height:1.6;min-height:130px}
+  .brief button{margin-top:16px}
+  .cust h2{font-size:24px}
+  .cust-sub{margin:8px 0 16px}
+  .crow{margin-bottom:8px}
+  .crow .cname{font-size:13px;width:150px}
+}
