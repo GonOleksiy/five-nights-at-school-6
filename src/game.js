@@ -127,7 +127,7 @@
 
     rt = new T.WebGLRenderTarget(320, 240);
 
-    world = W.build(scene);
+    world = W.build(scene, renderer.capabilities.getMaxAnisotropy());
 
     // ліхтар
     flashlight = new T.SpotLight(0xffeec4, 0, 34, 0.47, 0.58, 1.10);

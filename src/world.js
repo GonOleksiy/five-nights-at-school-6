@@ -7,11 +7,17 @@
   var T = global.THREE;
 
   /* ---------- процедурні текстури ---------- */
+  /* Анізотропія. Підлога й стіни в коридорі видні майже вздовж, а без
+     неї мипмапи перетворюють їх на мило вже за кілька метрів. Значення
+     приходить із рендерера (game.js), бо тільки він знає межу заліза. */
+  var ANISO = 1;
+
   function tex(w, h, draw, rep) {
     var c = document.createElement('canvas'); c.width = w; c.height = h;
     draw(c.getContext('2d'), w, h);
     var t = new T.CanvasTexture(c);
     t.wrapS = t.wrapT = T.RepeatWrapping;
+    t.anisotropy = ANISO;
     if (rep) t.repeat.set(rep[0], rep[1]);
     return t;
   }
@@ -61,24 +67,26 @@
 
   var TEX = {};
   function initTex() {
-    /* --- панель, пофарбована олійною фарбою (шкільний «низ») --- */
-    TEX.wallLow = tex(256, 256, function (g, w, h) {
+    /* --- панель, пофарбована олійною фарбою (шкільний «низ») ---
+       512 замість 256: удвічі більше текселів на метр, і кількість
+       деталей піднято так само — інакше це просто розтягнутий шум. */
+    TEX.wallLow = tex(512, 512, function (g, w, h) {
       g.fillStyle = '#46523f'; g.fillRect(0, 0, w, h);
-      speckle(g, w, h, 900, ['#3a4534', '#525f4a', '#2e382a'], 0.04, 0.16, 9);
-      for (var i = 0; i < 60; i++) {                       // патьоки валика
+      speckle(g, w, h, 3600, ['#3a4534', '#525f4a', '#2e382a'], 0.04, 0.16, 18);
+      for (var i = 0; i < 120; i++) {                       // патьоки валика
         g.globalAlpha = 0.03 + Math.random() * 0.06;
         g.fillStyle = Math.random() < .5 ? '#5d6b55' : '#333d2f';
-        g.fillRect(Math.random() * w, 0, 1 + Math.random() * 7, h);
+        g.fillRect(Math.random() * w, 0, 2 + Math.random() * 14, h);
       }
       g.globalAlpha = 1;
-      for (var k = 0; k < 26; k++) {                        // відколи до штукатурки
+      for (var k = 0; k < 104; k++) {                       // відколи до штукатурки
         g.fillStyle = 'rgba(176,168,150,' + (0.25 + Math.random() * 0.4) + ')';
         g.beginPath();
-        g.ellipse(Math.random() * w, Math.random() * h, 1 + Math.random() * 5, 1 + Math.random() * 4,
+        g.ellipse(Math.random() * w, Math.random() * h, 2 + Math.random() * 10, 2 + Math.random() * 8,
           Math.random() * 3, 0, 6.3);
         g.fill();
       }
-      cracks(g, w, h, 10, '#242c20', 12);
+      cracks(g, w, h, 22, '#242c20', 24);
       var gr = g.createLinearGradient(0, 0, 0, h);          // блиск олійної фарби
       gr.addColorStop(0, 'rgba(255,255,230,0.07)');
       gr.addColorStop(0.5, 'rgba(0,0,0,0)');
@@ -87,30 +95,30 @@
     }, [8, 2]);
 
     /* --- побілка (верх стіни) --- */
-    TEX.wallUp = tex(256, 256, function (g, w, h) {
+    TEX.wallUp = tex(512, 512, function (g, w, h) {
       g.fillStyle = '#b9b09b'; g.fillRect(0, 0, w, h);
-      speckle(g, w, h, 700, ['#a79e89', '#c9c1ad', '#8f8874'], 0.05, 0.18, 12);
-      for (var i = 0; i < 9; i++) {                         // патьоки вологи згори
+      speckle(g, w, h, 2800, ['#a79e89', '#c9c1ad', '#8f8874'], 0.05, 0.18, 24);
+      for (var i = 0; i < 18; i++) {                        // патьоки вологи згори
         var x = Math.random() * w;
         var gg = g.createLinearGradient(x, 0, x, h * (0.3 + Math.random() * 0.5));
         gg.addColorStop(0, 'rgba(120,108,86,0.30)');
         gg.addColorStop(1, 'rgba(120,108,86,0)');
         g.fillStyle = gg;
-        g.fillRect(x - 12, 0, 24 + Math.random() * 30, h);
+        g.fillRect(x - 24, 0, 48 + Math.random() * 60, h);
       }
-      cracks(g, w, h, 16, '#7a7260', 16);
-      for (var k = 0; k < 12; k++) {                        // осипалось
+      cracks(g, w, h, 34, '#7a7260', 32);
+      for (var k = 0; k < 48; k++) {                        // осипалось
         g.fillStyle = 'rgba(150,140,120,' + (0.15 + Math.random() * 0.25) + ')';
         g.beginPath();
-        g.ellipse(Math.random() * w, Math.random() * h, 3 + Math.random() * 14, 2 + Math.random() * 10,
+        g.ellipse(Math.random() * w, Math.random() * h, 6 + Math.random() * 28, 4 + Math.random() * 20,
           Math.random() * 3, 0, 6.3);
         g.fill();
       }
     }, [8, 2]);
 
     /* --- лінолеум у шашку, затертий --- */
-    TEX.floor = tex(256, 256, function (g, w, h) {
-      var cell = 64;
+    TEX.floor = tex(512, 512, function (g, w, h) {
+      var cell = w / 4;                                    // 4 плитки на повтор
       for (var yy = 0; yy < h; yy += cell) {
         for (var xx = 0; xx < w; xx += cell) {
           var odd = ((xx / cell) + (yy / cell)) % 2;
@@ -118,41 +126,41 @@
           g.fillRect(xx, yy, cell, cell);
         }
       }
-      speckle(g, w, h, 2600, ['#7d5c49', '#452f26', '#8a6a52', '#33221b'], 0.10, 0.35, 2.2);
-      g.strokeStyle = 'rgba(20,12,9,0.55)'; g.lineWidth = 2;
+      speckle(g, w, h, 10400, ['#7d5c49', '#452f26', '#8a6a52', '#33221b'], 0.10, 0.35, 4.4);
+      g.strokeStyle = 'rgba(20,12,9,0.55)'; g.lineWidth = 4;
       for (var s = 0; s <= w; s += cell) {                  // шви
         g.beginPath(); g.moveTo(s, 0); g.lineTo(s, h); g.stroke();
         g.beginPath(); g.moveTo(0, s); g.lineTo(w, s); g.stroke();
       }
-      for (var i = 0; i < 40; i++) {                        // дуги від швабри
+      for (var i = 0; i < 80; i++) {                        // дуги від швабри
         g.globalAlpha = 0.03 + Math.random() * 0.07;
         g.strokeStyle = Math.random() < .5 ? '#a2846c' : '#2b1d16';
-        g.lineWidth = 2 + Math.random() * 10;
+        g.lineWidth = 4 + Math.random() * 20;
         g.beginPath();
-        g.arc(Math.random() * w, Math.random() * h, 20 + Math.random() * 90,
+        g.arc(Math.random() * w, Math.random() * h, 40 + Math.random() * 180,
           Math.random() * 6.3, Math.random() * 6.3);
         g.stroke();
       }
       g.globalAlpha = 1;
-      cracks(g, w, h, 6, '#231710', 20);
+      cracks(g, w, h, 13, '#231710', 40);
     }, [10, 7]);
 
     /* --- стеля: плити з сіткою й плямами протікання --- */
-    TEX.ceil = tex(256, 256, function (g, w, h) {
+    TEX.ceil = tex(512, 512, function (g, w, h) {
       g.fillStyle = '#5a564e'; g.fillRect(0, 0, w, h);
-      speckle(g, w, h, 900, ['#4c483f', '#67625a', '#403c35'], 0.06, 0.2, 7);
-      g.strokeStyle = 'rgba(28,26,22,0.6)'; g.lineWidth = 3;
-      for (var s = 0; s <= w; s += 128) {
+      speckle(g, w, h, 3600, ['#4c483f', '#67625a', '#403c35'], 0.06, 0.2, 14);
+      g.strokeStyle = 'rgba(28,26,22,0.6)'; g.lineWidth = 6;
+      for (var s = 0; s <= w; s += w / 2) {                 // дві плити на повтор
         g.beginPath(); g.moveTo(s, 0); g.lineTo(s, h); g.stroke();
         g.beginPath(); g.moveTo(0, s); g.lineTo(w, s); g.stroke();
       }
-      for (var i = 0; i < 5; i++) {
+      for (var i = 0; i < 10; i++) {                        // плями протікання
         var x = Math.random() * w, y = Math.random() * h;
-        var gr2 = g.createRadialGradient(x, y, 2, x, y, 20 + Math.random() * 50);
+        var gr2 = g.createRadialGradient(x, y, 4, x, y, 40 + Math.random() * 100);
         gr2.addColorStop(0, 'rgba(120,96,50,0.35)');
         gr2.addColorStop(1, 'rgba(120,96,50,0)');
         g.fillStyle = gr2;
-        g.beginPath(); g.arc(x, y, 70, 0, 6.3); g.fill();
+        g.beginPath(); g.arc(x, y, 140, 0, 6.3); g.fill();
       }
     }, [12, 9]);
 
@@ -713,7 +721,8 @@
   }
 
   /* ============================================================ */
-  function build(scene) {
+  function build(scene, aniso) {
+    ANISO = Math.max(1, aniso || 1);
     initTex(); initMat();
     var g = new T.Group(); scene.add(g);
     var lights = [];
