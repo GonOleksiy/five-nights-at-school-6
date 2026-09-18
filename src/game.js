@@ -181,8 +181,13 @@
   function resize() {
     var w = window.innerWidth, h = window.innerHeight;
     renderer.setSize(Math.max(320, w * PIX) | 0, Math.max(240, h * PIX) | 0, false);
-    camera.aspect = w / h; camera.updateProjectionMatrix();
-    camCam.aspect = w / h; camCam.updateProjectionMatrix();
+    /* На вертикальному екрані телефона кут огляду по горизонталі падав
+       удвічі — з-за столу було видно смужку. Розширюємо вертикальний
+       кут, щоб горизонтальний лишався хоч якимось. */
+    var asp = w / h;
+    var wide = asp >= 1.2 ? 0 : (1.2 - Math.max(0.42, asp)) * 32;
+    camera.aspect = asp; camera.fov = 60 + wide; camera.updateProjectionMatrix();
+    camCam.aspect = asp; camCam.fov = 78 + wide; camCam.updateProjectionMatrix();
   }
 
   /* ---------- персонажі ---------- */
@@ -1102,6 +1107,24 @@
         lx = e.clientX; ly = e.clientY;
       }
     });
+
+    /* Телефон. Гру дають друзям посиланням, і половина відкриє її з
+       телефона: там немає ні клавіатури, ні mousemove. Кнопки HUD і так
+       натискаються пальцем, бракувало тільки огляду — його й додаємо
+       протяжкою. */
+    canvas.addEventListener('touchstart', function (e) {
+      if (G.phase !== 'play' || !e.touches.length) return;
+      dragging = true; lx = e.touches[0].clientX; ly = e.touches[0].clientY;
+    }, { passive: true });
+    canvas.addEventListener('touchmove', function (e) {
+      if (!dragging || G.phase !== 'play' || G.camsUp || !e.touches.length) return;
+      var t = e.touches[0];
+      G.yaw -= (t.clientX - lx) * 0.005; G.pitch -= (t.clientY - ly) * 0.004;
+      lx = t.clientX; ly = t.clientY;
+      e.preventDefault();
+    }, { passive: false });
+    canvas.addEventListener('touchend', function () { dragging = false; }, { passive: true });
+    canvas.addEventListener('touchcancel', function () { dragging = false; }, { passive: true });
 
     elCams.addEventListener('click', camClick);
     elCams.querySelectorAll('.cbtn').forEach(function (b) {

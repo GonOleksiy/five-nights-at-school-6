@@ -15,7 +15,7 @@
 html,body{width:100%;height:100%;overflow:hidden;background:#000;font-family:var(--ui);color:var(--bone)}
 .hidden{display:none !important}
 
-#gl{position:fixed;inset:0;width:100%;height:100%;display:block;image-rendering:pixelated;image-rendering:crisp-edges}
+#gl{position:fixed;inset:0;width:100%;height:100%;display:block;image-rendering:pixelated;image-rendering:crisp-edges;touch-action:none}
 
 /* ---------- пост-ефекти ---------- */
 #fx-grain,#fx-scan,#fx-vig,#fx-flash,#fx-red{position:fixed;inset:0;pointer-events:none;z-index:5}
@@ -243,4 +243,32 @@ body.camsup #power-box{bottom:auto;top:78px;left:26px}
   .cust-sub{margin:8px 0 16px}
   .crow{margin-bottom:8px}
   .crow .cname{font-size:13px;width:150px}
+}
+
+/* ---------- телефон ----------
+   Сім кнопок в один ряд не влазять у 375 px — рядок просто виїжджав
+   за екран разом із «КАМЕРИ». */
+@media (max-width:560px){
+  #buttons{flex-wrap:wrap;width:96vw;gap:6px;justify-content:center;bottom:14px}
+  .btn{min-width:0;flex:1 1 21%;padding:7px 2px}
+  .btn kbd{font-size:9px;letter-spacing:1px}
+  .btn span{font-size:10px;letter-spacing:0}
+  #power-box{bottom:128px;left:14px}
+  body.camsup #power-box{top:58px;bottom:auto}
+  #pw-bar{width:150px;height:12px}
+  #pw-num{font-size:20px}
+  #pw-usage{font-size:15px;height:18px}
+  #hud-top{top:10px;right:14px}
+  #clock{font-size:32px}
+  #night-label{font-size:12px;letter-spacing:4px}
+  #subtitle{bottom:172px;font-size:15px;width:92vw}
+  #hint{font-size:17px;letter-spacing:3px;width:88vw;text-align:center}
+  #cam-title{font-size:14px;letter-spacing:3px;top:14px;left:16px}
+  #cam-rec{font-size:12px;top:16px;right:16px}
+  #cam-map{gap:5px;bottom:16px}
+  .cbtn{width:40px;padding:8px 0;font-size:13px}
+  #cam-help{bottom:70px;font-size:10px;letter-spacing:1px;width:92vw;text-align:center}
+  #qte{padding:18px 16px}
+  #qte-q{font-size:19px;margin:10px 0 14px}
+  .ans{font-size:16px;padding:10px 12px}
 }
