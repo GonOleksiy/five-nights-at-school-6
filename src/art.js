@@ -916,13 +916,16 @@
         c.fillStyle = bg; c.fillRect(0, 0, W, H);
       }
     });
+    /* Дельти. Контур тут прибрано (lineA: 0): з обведенням це були дві
+       еліпси, наліплені поверх тулуба, а не плече. Тепер вони дають
+       лише світлотінь, а силует лишається суцільним. */
     [-1, 1].forEach(function (sd) {
       volume(g, function (c) {
         c.beginPath();
-        c.ellipse(cx + sd * shW * 0.40, shY + bodyH * 0.016, shW * 0.155, bodyH * 0.034, 0, 0, 6.3);
+        c.ellipse(cx + sd * shW * 0.40, shY + bodyH * 0.018, shW * 0.165, bodyH * 0.036, 0, 0, 6.3);
       }, cloth, {
-        axis: [cx + sd * shW * 0.55, 0, cx + sd * shW * 0.25, 0], light: sd,
-        baseHex: cloth, deep: 0.45, lineW: 1.8
+        axis: [cx + sd * shW * 0.56, 0, cx + sd * shW * 0.22, 0], light: sd,
+        baseHex: cloth, deep: 0.38, rim: 0.18, lineA: 0
       });
     });
     if (spec.decor) spec.decor(g, {
@@ -944,19 +947,20 @@
     /* комір — малюється ПІСЛЯ шиї, інакше вона його перекриває.
        Без нього голова просто висіла над плечима. */
     (function () {
-      var cw = headR * 0.74, cd = bodyH * 0.052;
+      /* Виріз робимо пологим: гострий кут між кінцями коміра читався
+         на грудях як намальована літера «W». */
+      var cw = headR * 0.74, cd = bodyH * 0.046;
       volume(g, function (c) {
         c.beginPath();
         c.moveTo(cx - cw, shY - bodyH * 0.006);
-        c.quadraticCurveTo(cx - cw * 0.52, shY + cd * 0.30, cx - cw * 0.20, shY + cd);
-        c.lineTo(cx, shY + cd * 0.42);
-        c.lineTo(cx + cw * 0.20, shY + cd);
-        c.quadraticCurveTo(cx + cw * 0.52, shY + cd * 0.30, cx + cw, shY - bodyH * 0.006);
-        c.quadraticCurveTo(cx, shY - bodyH * 0.034, cx - cw, shY - bodyH * 0.006);
+        c.quadraticCurveTo(cx - cw * 0.56, shY + cd * 0.40, cx - cw * 0.24, shY + cd);
+        c.quadraticCurveTo(cx, shY + cd * 0.80, cx + cw * 0.24, shY + cd);
+        c.quadraticCurveTo(cx + cw * 0.56, shY + cd * 0.40, cx + cw, shY - bodyH * 0.006);
+        c.quadraticCurveTo(cx, shY - bodyH * 0.032, cx - cw, shY - bodyH * 0.006);
         c.closePath();
       }, lite(cloth, 0.07), {
         axis: [cx - cw, 0, cx + cw, 0], light: -1,
-        baseHex: cloth, deep: 0.42, lineW: 2
+        baseHex: cloth, deep: 0.42, lineW: 1.6, lineA: 0.55
       });
       ao(g, cx, shY + cd * 0.35, cw * 0.55, cd * 0.55, 0.42);
     })();
