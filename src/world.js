@@ -259,6 +259,27 @@
       g.fillStyle = gr; g.fillRect(0, 0, w, h);
     });
 
+    /* --- двері класу: одна стулка --- */
+    TEX.door1 = tex(256, 256, function (g, w, h) {
+      g.fillStyle = '#6d3a2e'; g.fillRect(0, 0, w, h);
+      speckle(g, w, h, 420, ['#7d4536', '#5b2f25', '#8b5140'], 0.05, 0.16, 8);
+      g.fillStyle = 'rgba(150,170,160,0.28)';
+      g.fillRect(34, 24, w - 68, 76);
+      g.strokeStyle = 'rgba(28,14,10,0.85)'; g.lineWidth = 4;
+      g.strokeRect(34, 24, w - 68, 76);
+      g.strokeRect(34, 118, w - 68, 54);
+      g.strokeRect(34, 186, w - 68, 50);
+      g.fillStyle = '#9a9384'; g.fillRect(w - 44, 132, 14, 30);   // ручка
+      g.fillStyle = 'rgba(20,12,10,0.8)';
+      g.beginPath(); g.arc(w - 37, 172, 4, 0, 6.3); g.fill();     // замок
+      for (var i = 0; i < 16; i++) {
+        g.globalAlpha = 0.08 + Math.random() * 0.2;
+        g.fillStyle = Math.random() < 0.5 ? '#c09a84' : '#2a1510';
+        g.fillRect(Math.random() * w, Math.random() * h, 1 + Math.random() * 8, 1 + Math.random() * 3);
+      }
+      g.globalAlpha = 1;
+    });
+
     /* --- шкільні двері: фарбоване дерево, фільонки, скло вгорі --- */
     TEX.door = tex(256, 256, function (g, w, h) {
       g.fillStyle = '#6d3a2e'; g.fillRect(0, 0, w, h);
@@ -420,6 +441,7 @@
     M.dark = new T.MeshLambertMaterial({ color: 0x1b1c1f });
     M.door = new T.MeshLambertMaterial({ map: TEX.door });
     M.doorEdge = new T.MeshLambertMaterial({ color: 0x4e2920 });
+    M.door1 = new T.MeshLambertMaterial({ map: TEX.door1 });
     M.lockDoor = new T.MeshLambertMaterial({ map: TEX.lockDoor });
     M.lockSide = new T.MeshLambertMaterial({ color: 0x33463f });
     M.lockTop = new T.MeshLambertMaterial({ color: 0x28332e });
@@ -452,6 +474,13 @@
     var up = box(len, h - lowH, t, M.wallUp, cx, lowH + (h - lowH) / 2, cz, -ang);
     lo.receiveShadow = up.receiveShadow = true;
     g.add(lo); g.add(up);
+    /* Рейка на стику панелі й побілки. Без неї два кольори сходились
+       голим швом, і стіна читалась як дві наліплені смуги. */
+    if (len > 0.5) {
+      var rail = box(len, 0.06, t + 0.04, M.woodDark, cx, lowH + 0.015, cz, -ang);
+      rail.receiveShadow = true;
+      g.add(rail);
+    }
   }
 
   /* скло у прорізі */
@@ -889,6 +918,39 @@
       pail.position.set(-3.10, 0.15, -12.10); g.add(pail);
       g.add(box(0.035, 1.30, 0.035, M.woodDark, -2.92, 0.65, -12.14, 0.16));
     })();
+
+    /* --- двері класів уздовж головного коридору ---
+       Стіна Столової з боку коридору була суцільною смугою на 9 метрів.
+       Двері дають коридору ритм і роблять його схожим на школу. */
+    [-9.9, -6.9, -4.0, 4.0, 6.9, 9.9].forEach(function (dx2, i) {
+      g.add(box(1.32, 2.32, 0.06, M.frame, dx2, 1.16, CZ0 - 0.055));
+      g.add(box(1.06, 2.16, 0.07, M.door1, dx2, 1.08, CZ0 - 0.095));
+      g.add(box(0.30, 0.20, 0.02, M.notice, dx2 + 0.80, 1.90, CZ0 - 0.06));
+      // потерта пляма біля ручки
+      g.add(box(0.26, 0.34, 0.008, new T.MeshLambertMaterial({ color: 0x59372c }),
+        dx2 + 0.34, 1.12, CZ0 - 0.132));
+    });
+
+    /* --- корпуси камер спостереження ---
+       Виносимо ЗА точку зйомки, інакше камера дивилась би у власний
+       кожух і давала чорний кадр. */
+    CAMS.forEach(function (c) {
+      var dx3 = c.look[0] - c.pos[0], dz3 = c.look[2] - c.pos[2];
+      var L3 = Math.hypot(dx3, dz3) || 1;
+      var a3 = Math.atan2(-dx3, -dz3);   // локальна −Z має дивитись уздовж погляду
+      var bx = c.pos[0] - dx3 / L3 * 0.34, bz = c.pos[2] - dz3 / L3 * 0.34;
+      var cg = new T.Group();
+      cg.add(box(0.20, 0.13, 0.32, M.frame, 0, 0, 0));
+      cg.add(box(0.10, 0.10, 0.09, M.dark, 0, -0.01, -0.19));          // об'єктив
+      cg.add(box(0.05, 0.16, 0.05, M.metal, 0, 0.14, 0.06));           // кронштейн
+      cg.add(box(0.14, 0.03, 0.14, M.metal, 0, 0.22, 0.06));
+      var led = new T.Mesh(new T.SphereGeometry(0.016, 6, 5),
+        new T.MeshBasicMaterial({ color: 0xd9412f }));
+      led.position.set(0.07, 0.04, -0.14); cg.add(led);
+      cg.position.set(bx, c.pos[1], bz);
+      cg.rotation.y = a3;
+      g.add(cg);
+    });
 
     /* шафки в коридорах — лицем у коридор */
     for (var i2 = 0; i2 < 9; i2++) {
