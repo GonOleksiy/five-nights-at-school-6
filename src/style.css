@@ -250,7 +250,7 @@ body.camsup #power-box{bottom:auto;top:78px;left:26px}
    за екран разом із «КАМЕРИ». */
 @media (max-width:560px){
   #buttons{flex-wrap:wrap;width:96vw;gap:6px;justify-content:center;bottom:14px}
-  .btn{min-width:0;flex:1 1 21%;padding:7px 2px}
+  .btn{min-width:0;max-width:122px;flex:1 1 21%;padding:7px 2px}
   .btn kbd{font-size:9px;letter-spacing:1px}
   .btn span{font-size:10px;letter-spacing:0}
   #power-box{bottom:128px;left:14px}
