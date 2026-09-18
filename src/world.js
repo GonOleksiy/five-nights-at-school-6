@@ -717,7 +717,7 @@
     var pl = new T.PointLight(0xbfd0c0, 0, 9, 2);
     pl.position.set(x, 2.6, z);
     g.add(pl);
-    lights.push({ light: pl, tube: tube, base: on ? 0.17 : 0, baseOn: !!on, flick: 0 });
+    lights.push({ light: pl, tube: tube, base: on ? 0.11 : 0, baseOn: !!on, flick: 0 });
   }
 
   /* ============================================================ */
@@ -839,7 +839,7 @@
         sg.add(box(1.5, 0.18, 0.3, M.wallLow, 0, 0.09 + i * 0.18, -i * 0.3));
       sg.position.set(x, 0, z); sg.rotation.y = dir;
       g.add(sg);
-      var dl = new T.PointLight(0x22303e, 0.12, 5, 2);
+      var dl = new T.PointLight(0x22303e, 0.05, 4, 2);
       dl.position.set(x, 1.6, z); g.add(dl);
     }
     stairs(X0 + 0.9, -7.2, Math.PI / 2);
@@ -1032,10 +1032,10 @@
     })();
 
     /* --- лампи --- */
-    lamp(g, -11, -8.05, lights, true);
+    lamp(g, -11, -8.05, lights, false);
     lamp(g, -5.5, -8.05, lights, false);
     lamp(g, 5.5, -8.05, lights, false);
-    lamp(g, 11, -8.05, lights, true);
+    lamp(g, 11, -8.05, lights, false);
     lamp(g, -13.5, -1.5, lights, false);
     lamp(g, -13.5, 5.0, lights, false);
     lamp(g, 13.5, -1.5, lights, false);
@@ -1047,8 +1047,11 @@
     /* --- вулиця за дверима --- */
     var st = new T.Mesh(new T.PlaneGeometry(40, 30), new T.MeshLambertMaterial({ color: 0x14161a }));
     st.rotation.x = -Math.PI / 2; st.position.set(0, -0.02, -26); g.add(st);
-    var lampPost = new T.PointLight(0xffb066, 0.85, 22, 1.7);
-    lampPost.position.set(4.5, 4.2, -18); g.add(lampPost);
+    /* Вуличний ліхтар світив на 22 м при 0.85 — а стіни в цій сцені
+       тіней не кидають, тож він просто прошивав будівлю наскрізь і
+       освітлював коридор. Радіус скорочено до тамбура. */
+    var lampPost = new T.PointLight(0xffb066, 0.70, 12.5, 1.7);
+    lampPost.position.set(4.5, 4.2, -18.5); g.add(lampPost);
     g.add(box(0.2, 5, 0.2, M.metal, 4.5, 2.5, -18));
 
     /* --- стіл охорони --- */

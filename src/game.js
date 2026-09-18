@@ -94,11 +94,15 @@
   };
 
   /* ---------- three ---------- */
-  var renderer, scene, camera, camCam, rt, world, flashlight, ambient, shutters = {}, shakeSeed = 0, camIR;
+  var renderer, scene, camera, camCam, world, flashlight, ambient, shutters = {}, shakeSeed = 0, camIR;
   /* Камери — нічного бачення: у темряві вони бачать те, чого не бачить око.
      Це і робить планшет вартим свого заряду, і пояснює, чому Столову
      видно тільки на CAM 05. */
-  var AMB_DARK = 0.085, AMB_CAM = 0.30;
+  /* Монітори вахти: три різні камери, кожна зі своєю ціллю рендеру.
+     Перемикаються врозбій і ніколи не показують одне й те саме. */
+  var monRT = [], monCam = [], monIdx = [0, 1, 4], monT = [2.5, 6.0, 9.5], monTurn = 0;
+
+  var AMB_DARK = 0.040, AMB_CAM = 0.30;
   var FLASH_I = 2.3;          /* яскравість ліхтаря; вище — біліють ближні стіни */
   var PIX = 0.58;
 
@@ -113,7 +117,7 @@
     scene.fog = new T.FogExp2(0x04050a, 0.082);
     ambient = new T.AmbientLight(0x1b2130, AMB_DARK);
     scene.add(ambient);
-    var moon = new T.DirectionalLight(0x93a8c8, 0.085);
+    var moon = new T.DirectionalLight(0x93a8c8, 0.030);   /* світить крізь стіни — тримаємо ледь-ледь */
     moon.position.set(-6, 12, -20); scene.add(moon);
 
     camera = new T.PerspectiveCamera(60, 1, 0.05, 90);
@@ -125,7 +129,15 @@
     camIR = new T.PointLight(0xa8d8b4, 0, 17, 1.35);
     scene.add(camIR);
 
-    rt = new T.WebGLRenderTarget(320, 240);
+    /* Три монітори показували один і той самий фід — виглядало як
+       помилка, а не як пульт. Тепер у кожного власна ціль рендеру
+       й власна камера, і вони перемикаються врозбій, як мультиплексор
+       справжньої системи спостереження. */
+    for (var mi = 0; mi < 3; mi++) {
+      monRT.push(new T.WebGLRenderTarget(224, 168));
+      var mc = new T.PerspectiveCamera(74, 4 / 3, 0.05, 70);
+      monCam.push(mc);
+    }
 
     var aniso = renderer.capabilities.getMaxAnisotropy();
     window.Art.setAniso(aniso);       // до першої картки персонажа
@@ -147,9 +159,10 @@
     scene.add(camera);
 
     // монітори показують активну камеру
-    world.screens.forEach(function (sc) {
-      sc.material = new T.MeshBasicMaterial({ map: rt.texture });
+    world.screens.forEach(function (sc, i) {
+      sc.material = new T.MeshBasicMaterial({ map: (monRT[i] || monRT[0]).texture });
     });
+    for (var k = 0; k < 3; k++) aimMon(k);
 
     buildShutters();
     resize();
@@ -762,6 +775,35 @@
   }
 
   /* ---------- камери ---------- */
+  /* ---------- монітори вахти ---------- */
+  function aimMon(i) {
+    var c = W.CAMS[monIdx[i]];
+    monCam[i].position.set(c.pos[0], c.pos[1], c.pos[2]);
+    monCam[i].lookAt(c.look[0], c.look[1], c.look[2]);
+  }
+
+  /* Наступна камера для монітора i — обов'язково та, якої зараз немає
+     на жодному з трьох екранів. */
+  function cycleMon(i) {
+    var free = [];
+    for (var k = 0; k < W.CAMS.length; k++) {
+      if (monIdx.indexOf(k) < 0) free.push(k);
+    }
+    if (!free.length) return;
+    monIdx[i] = free[Math.floor(Math.random() * free.length)];
+    aimMon(i);
+  }
+
+  function updateMons(dt) {
+    for (var i = 0; i < 3; i++) {
+      monT[i] -= dt;
+      if (monT[i] <= 0) {
+        monT[i] = 7 + Math.random() * 6;
+        cycleMon(i);
+      }
+    }
+  }
+
   function setCam(i) {
     G.cam = i;
     var c = W.CAMS[i];
@@ -1056,13 +1098,28 @@
     faceCards();
 
     // рендер фіда камер у текстуру моніторів (екрани ховаємо, щоб не було петлі)
+    updateMons(dt);
     rtTick += dt;
     if (rtTick > 0.1) {
       rtTick = 0;
       world.screens.forEach(function (s) { s.visible = false; });
-      renderer.setRenderTarget(rt);
-      renderer.render(scene, camCam);
+      /* Фід монітора — це теж «нічна» камера, тому на час проходу
+         піднімаємо ambient і ставимо ІЧ-лампу в точку тієї камери.
+         Інакше на екранах була б рівна чорнота. */
+      var ambSave = ambient.intensity, irSave = camIR.intensity;
+      var irX = camIR.position.x, irY = camIR.position.y, irZ = camIR.position.z;
+      ambient.intensity = AMB_CAM;
+      camIR.intensity = 1.30;
+      /* За такт оновлюємо ОДИН монітор — три цілі рендеру коштували б
+         утричі дорожче, а смикання екранів урозбій лише додає правди. */
+      var mi = monTurn % 3; monTurn++;
+      camIR.position.set(monCam[mi].position.x, monCam[mi].position.y - 0.1, monCam[mi].position.z);
+      renderer.setRenderTarget(monRT[mi]);
+      renderer.render(scene, monCam[mi]);
       renderer.setRenderTarget(null);
+      ambient.intensity = ambSave;
+      camIR.intensity = irSave;
+      camIR.position.set(irX, irY, irZ);
       world.screens.forEach(function (s) { s.visible = true; });
     }
 
