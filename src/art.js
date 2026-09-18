@@ -631,9 +631,18 @@
     onewall: { torso: 0.18, headT: 0.26, armF: [2.32, -0.32], armN: [0.10, 0.10], legF: [0.05, 0.02], legN: [0.05, 0.02], hand: 0.12 },
     behind: { torso: -0.06, headT: 0.12, armF: [0.02, 0.02], armN: [0.02, 0.02], legF: [0.03, 0.02], legN: [0.03, 0.02], hand: 0.05 },
     crouch: { torso: 0.52, headT: 0.50, armF: [0.55, 0.62], armN: [0.50, 0.66], legF: [0.62, -0.95], legN: [0.52, -0.88], hand: 0.22, drop: 0.13 },
+    /* Три додаткові пози: за ніч кожен персонаж стрибає десятки разів,
+       і на семи позах це починало повторюватись. */
+    /* Пози розводимо нахилом тулуба, головою й ногами, а не розмахом
+       рук: у довгоруких персонажів широкий замах усе одно обріжеться
+       обмежувачем нижче, і поза «схлопнеться» назад у стійку. */
+    stoop: { torso: 0.64, headT: 0.86, armF: [0.30, 0.22], armN: [0.26, 0.26], legF: [0.11, 0.04], legN: [0.08, 0.03], hand: 0.20, drop: 0.05 },
+    peer: { torso: -0.22, headT: 1.02, armF: [0.06, 0.05], armN: [0.05, 0.04], legF: [0.03, 0.02], legN: [0.13, 0.03], hand: 0.07 },
+    twist: { torso: 0.30, headT: -0.46, armF: [0.42, 0.34], armN: [-0.26, 0.20], legF: [0.09, 0.03], legN: [0.15, 0.04], hand: 0.16 },
     lunge: { torso: 0.32, headT: -0.20, armF: [2.38, -0.62], armN: [2.48, -0.66], legF: [0.35, 0.10], legN: [0.30, 0.10], hand: 0.52, mouth: 0.30 }
   };
-  var POSE_KEYS = ['stand', 'lean', 'reach', 'tilt', 'onewall', 'behind', 'crouch'];
+  var POSE_KEYS = ['stand', 'lean', 'reach', 'tilt', 'onewall', 'behind', 'crouch',
+    'stoop', 'peer', 'twist'];
 
   /* ============================================================
      ФІГУРА
@@ -727,7 +736,15 @@
          на плечі лишався шов, і рука виглядала приставленою. */
       var sx = cx + m * shW * 0.355;
       var sy = shY + bodyH * 0.002;
-      var pts = chain(sx, sy, [[a[0] * m, armLen * 0.52], [(a[0] + a[1]) * m, armLen * 0.48]]);
+      /* У довгоруких (Копилов, Тітова) розмашисті пози виносили кисть
+         за полотно, і її різало краєм — помітно було вже на «lean».
+         Підбираємо коефіцієнт кута, поки кисть не вміститься в кадр. */
+      var k = 1, pts;
+      for (var it = 0; it < 14; it++) {
+        pts = chain(sx, sy, [[a[0] * k * m, armLen * 0.52], [(a[0] + a[1]) * k * m, armLen * 0.48]]);
+        if (pts[2][0] > 52 && pts[2][0] < W - 52 && pts[2][1] > 52 && pts[2][1] < H - 24) break;
+        k *= 0.88;
+      }
       var base = far ? dark(cloth, 0.12) : cloth;
       volume(g, function (c) { limbPath(c, pts, shW * 0.345, shW * 0.150); },
         base, {
@@ -1326,6 +1343,10 @@
      ПУБЛІЧНЕ
      ============================================================ */
   var cache = {};
+  /* Картку видно й під кутом (камера дивиться згори, а білборд
+     повертається тільки по Y), тож анізотропія тут теж має сенс.
+     Значення ставить game.js, коли з'явиться рендерер. */
+  var ANISO_CARD = 4;
 
   function make(key, poseName) {
     var id = key + '|' + poseName;
@@ -1337,7 +1358,7 @@
     else drawFigure(g, SPEC[key], poseName);
     var t = new global.THREE.CanvasTexture(c);
     t.minFilter = global.THREE.LinearMipmapLinearFilter;
-    t.anisotropy = 4;
+    t.anisotropy = ANISO_CARD;
     cache[id] = t;
     return t;
   }
@@ -1345,6 +1366,7 @@
   global.Art = {
     W: W, H: H, SPEC: SPEC, POSE: POSE, POSE_KEYS: POSE_KEYS,
     make: make,
+    setAniso: function (n) { ANISO_CARD = Math.max(1, n || 1); },
     height: function (key) { return key === 'snow' ? 1.9 : SPEC[key].h; }
   };
 
