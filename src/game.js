@@ -679,8 +679,8 @@
     S.sfx.chime6am();
     G.chars.forEach(function (c) { c.reset(true); });
     elHud.classList.add('hidden');
-    var done = JSON.parse(localStorage.getItem('n6') || '[]');
-    if (done.indexOf(G.night) < 0) { done.push(G.night); localStorage.setItem('n6', JSON.stringify(done)); }
+    var done = loadDone();
+    if (done.indexOf(G.night) < 0) { done.push(G.night); saveDone(done); }
     if (G.night === 7) {
       $('win-title').textContent = 'КАСТОМНУ НІЧ ЗАКРИТО';
       $('win-text').textContent = 'Ти сам виставив їм цифри — і все одно дожив до шостої.\nЦе вже не робота. Це принцип.';
@@ -1136,8 +1136,22 @@
   }
 
   /* ---------- меню ---------- */
+
+  /* Сховище буває недоступне: пісочниця iframe, вимкнені куки, приватний
+     режим. Без try/catch виняток вилітав із boot() ще до першого кадру —
+     і меню виходило намальоване, але зовсім мертве. */
+  function loadDone() {
+    try {
+      var v = JSON.parse(localStorage.getItem('n6'));
+      return Array.isArray(v) ? v : [];
+    } catch (e) { return []; }
+  }
+  function saveDone(a) {
+    try { localStorage.setItem('n6', JSON.stringify(a)); } catch (e) { }
+  }
+
   function paintNights() {
-    var done = JSON.parse(localStorage.getItem('n6') || '[]');
+    var done = loadDone();
     var w = $('menu-nights'); w.innerHTML = '';
     for (var i = 1; i <= 6; i++) {
       var d = document.createElement('div');
@@ -1237,9 +1251,9 @@
     window.__G = G; window.__kill = kill;
     initChars();
     initInput();
-    initMenu();
     camera.position.set(SEAT.x, EYE.sit, SEAT.z);
-    requestAnimationFrame(frame);
+    requestAnimationFrame(frame);   /* кадр іде першим: збій у меню не вб'є рендер */
+    initMenu();
   }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
