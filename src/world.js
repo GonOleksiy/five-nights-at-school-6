@@ -825,12 +825,18 @@
     g.add(box(1.40, 0.05, 0.55, M.dark, 0, 0.82, CZ0 + 0.28));
     slab(OX0, OZ, OX1, CZ0, 2.55, M.ceil, false);
     // світло в ніші — тьмяна лампа над головою
-    var deskLight = new T.PointLight(0xffc98a, 0.55, 4.2, 2);
-    deskLight.position.set(0, 2.3, -6.55); g.add(deskLight);
-    g.add(box(0.5, 0.06, 0.2, M.metal, 0, 2.45, -6.55));
+    /* Була точкова лампа — і вона, висячи просто над вікном вахти,
+       світила крізь стіну в коридор: заміряно 35.6 з 48.9 усієї
+       яскравості коридору. Тіней у цій сцені немає, тож обмежуємо
+       світло геометрично — прожектором, спрямованим у стіл. */
+    var deskLight = new T.SpotLight(0xffc98a, 0.55, 5.0, 0.80, 0.75, 1.5);
+    deskLight.position.set(0, 2.42, -6.55);
+    deskLight.target.position.set(0, 0.2, -6.70);
+    g.add(deskLight); g.add(deskLight.target);
+    g.add(box(0.5, 0.06, 0.2, M.metal, 0, 2.52, -6.55));
     // тепла пляма від настільної лампи — щоб робоче місце мало свій центр
-    var lampGlow = new T.PointLight(0xffb867, 0.62, 1.9, 2);
-    lampGlow.position.set(-1.25, 1.00, -6.88); g.add(lampGlow);
+    var lampGlow = new T.PointLight(0xffb867, 0.70, 1.7, 2);
+    lampGlow.position.set(-1.25, 1.00, -6.70); g.add(lampGlow);
 
     /* --- сходи на 2-й поверх (жовте) --- */
     function stairs(x, z, dir) {
