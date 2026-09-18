@@ -15,7 +15,15 @@
   var W = 512, H = 1024;
 
   /* ---------- кольори ---------- */
+  /* Приймає і '#rrggbb', і вже готове 'rgba(r,g,b,a)'. Без другого
+     випадку будь-який колір, пропущений крізь dark()/lite() двічі,
+     давав NaN — і форма малювалась чорною. Так чорніли пальці дальньої
+     руки: долоня йшла базовим кольором, а пальці — похідним. */
   function hex2rgb(h) {
+    if (h.charAt(0) !== '#') {
+      var m = h.match(/-?\d+(\.\d+)?/g);
+      return m && m.length >= 3 ? [+m[0], +m[1], +m[2]] : [128, 128, 128];
+    }
     var c = parseInt(h.slice(1), 16);
     return [c >> 16, (c >> 8) & 255, c & 255];
   }
@@ -626,48 +634,103 @@
 
     var cloth = spec.cloth, pant = spec.pant, skin = spec.skin;
 
+    /* Кисть. Спершу долоня, і тільки потім пальці — від лінії кісточок.
+       Доти всі чотири пальці росли просто із зап'ястка, і кисть читалась
+       як павук, приклеєний до рукава. */
     function hand(x, y, ang, sc, base, spread) {
       var f = spread === undefined ? 0.16 : spread;
-      for (var i = 0; i < 4; i++) {
-        var a = ang + (i - 1.5) * f;
-        var len = 26 * sc * (i === 0 || i === 3 ? 0.84 : 1);
-        var p = chain(x, y, [[a, len], [a + 0.38, len * 0.78]]);
-        (function (pp) {
-          volume(g, function (c) { limbPath(c, pp, 7.4 * sc, 3.6 * sc); },
-            dark(base, 0.16), {
-            axis: [x - 14 * sc, 0, x + 14 * sc, 0], light: -1,
-            baseHex: base, deep: 0.55, lineW: 1.5, rim: 0.4
-          });
-        })(p);
-      }
-      var th = chain(x, y, [[ang - 1.20, 22 * sc], [ang - 1.5, 14 * sc]]);
-      volume(g, function (c) { limbPath(c, th, 8 * sc, 4.6 * sc); },
-        dark(base, 0.16), {
-        axis: [x - 14 * sc, 0, x + 14 * sc, 0], light: -1,
-        baseHex: base, deep: 0.55, lineW: 1.5
-      });
-      volume(g, function (c) {
-        c.beginPath(); c.ellipse(x, y - 3 * sc, 9.5 * sc, 12 * sc, 0, 0, 6.3);
+      var dx = Math.sin(ang), dy = Math.cos(ang);          // уздовж кисті
+      var nx = Math.cos(ang), ny = -Math.sin(ang);         // впоперек
+      var pl = 18 * sc, pw = 11.5 * sc;
+      var kx = x + dx * pl, ky = y + dy * pl;              // кісточки
+
+      volume(g, function (c) {                             // долоня
+        c.beginPath();
+        c.moveTo(x - nx * pw * 0.70, y - ny * pw * 0.70);
+        c.quadraticCurveTo(x - dx * pw * 0.30 - nx * pw * 1.02, y - dy * pw * 0.30 - ny * pw * 1.02,
+          kx - nx * pw * 0.88, ky - ny * pw * 0.88);
+        c.quadraticCurveTo(kx + dx * pw * 0.22, ky + dy * pw * 0.22,
+          kx + nx * pw * 0.96, ky + ny * pw * 0.96);
+        c.quadraticCurveTo(x + nx * pw * 1.04, y + ny * pw * 1.04,
+          x - nx * pw * 0.70, y - ny * pw * 0.70);
+        c.closePath();
       }, base, {
-        axis: [x - 10 * sc, 0, x + 10 * sc, 0], light: -1,
-        baseHex: base, deep: 0.5, lineW: 1.6
+        axis: [x - 16 * sc, 0, x + 16 * sc, 0], light: -1,
+        baseHex: base, deep: 0.50, lineW: 1.7,
+        detail: function (c) {                             // сухожилля
+          c.strokeStyle = 'rgba(0,0,0,0.16)'; c.lineWidth = 1.6 * sc; c.lineCap = 'round';
+          for (var t = -1; t <= 1; t += 0.66) {
+            c.beginPath();
+            c.moveTo(x + nx * pw * 0.45 * t, y + ny * pw * 0.45 * t);
+            c.lineTo(kx + nx * pw * 0.66 * t, ky + ny * pw * 0.66 * t);
+            c.stroke();
+          }
+        }
       });
+
+      for (var i = 0; i < 4; i++) {                        // пальці від кісточок
+        var t2 = (i - 1.5) / 1.5;
+        var bx = kx + nx * pw * 0.76 * t2, by = ky + ny * pw * 0.76 * t2;
+        var a = ang + t2 * f;
+        var len = (19 - Math.abs(t2) * 5.5) * sc;
+        var pp = chain(bx, by, [[a, len], [a + 0.30, len * 0.70], [a + 0.58, len * 0.44]]);
+        (function (q, qx) {
+          volume(g, function (c) { limbPath(c, q, 6.6 * sc, 3.2 * sc); },
+            dark(base, 0.10), {
+            axis: [qx - 9 * sc, 0, qx + 9 * sc, 0], light: -1,
+            baseHex: base, deep: 0.50, lineW: 1.3, rim: 0.38
+          });
+        })(pp, bx);
+      }
+
+      var tbx = x + nx * pw * 0.72 + dx * pl * 0.22;       // великий палець
+      var tby = y + ny * pw * 0.72 + dy * pl * 0.22;
+      var tp = chain(tbx, tby, [[ang + 0.95, 15 * sc], [ang + 0.50, 12 * sc]]);
+      volume(g, function (c) { limbPath(c, tp, 8.4 * sc, 4.2 * sc); },
+        dark(base, 0.08), {
+        axis: [tbx - 10 * sc, 0, tbx + 10 * sc, 0], light: -1,
+        baseHex: base, deep: 0.50, lineW: 1.4
+      });
+
+      ao(g, kx, ky, pw * 0.95, pw * 0.5, 0.30);            // тінь під кісточками
     }
 
     function arm(far) {
       var a = far ? P.armF : P.armN, m = far ? -1 : 1;
-      var sx = cx + m * shW * 0.40;
-      var sy = shY + bodyH * 0.014;
+      /* Початок заводимо ВСЕРЕДИНУ тулуба й розширюємо верх: інакше
+         на плечі лишався шов, і рука виглядала приставленою. */
+      var sx = cx + m * shW * 0.355;
+      var sy = shY + bodyH * 0.002;
       var pts = chain(sx, sy, [[a[0] * m, armLen * 0.52], [(a[0] + a[1]) * m, armLen * 0.48]]);
       var base = far ? dark(cloth, 0.12) : cloth;
-      volume(g, function (c) { limbPath(c, pts, shW * 0.30, shW * 0.155); },
+      volume(g, function (c) { limbPath(c, pts, shW * 0.345, shW * 0.150); },
         base, {
         axis: [sx - shW * 0.3, 0, sx + shW * 0.3, 0], light: -1,
         baseHex: cloth, deep: far ? 0.42 : 0.62, lineW: 2, rim: far ? 0.42 : 0.30,
-        detail: function (c) { folds(c, sx, sy, pts[2][1], shW * 0.35, 7, 0.2); }
+        detail: function (c) {
+          folds(c, sx, sy, pts[2][1], shW * 0.35, 7, 0.2);
+          // зім'ятий згин ліктя
+          c.strokeStyle = 'rgba(0,0,0,0.22)'; c.lineWidth = 2.4 * s; c.lineCap = 'round';
+          for (var k = -1; k <= 1; k++) {
+            c.beginPath();
+            c.moveTo(pts[1][0] - shW * 0.11, pts[1][1] + k * 6 * s);
+            c.quadraticCurveTo(pts[1][0], pts[1][1] + k * 6 * s + 5 * s,
+              pts[1][0] + shW * 0.11, pts[1][1] + k * 6 * s);
+            c.stroke();
+          }
+        }
       });
       var wrist = pts[2];
       var ang = Math.atan2(wrist[0] - pts[1][0], wrist[1] - pts[1][1]);
+      // манжет: межа рукава й шкіри, інакше кисть просто виростає з тканини
+      volume(g, function (c) {
+        c.beginPath();
+        c.ellipse(wrist[0] - Math.sin(ang) * shW * 0.03, wrist[1] - Math.cos(ang) * shW * 0.03,
+          shW * 0.098, shW * 0.060, -ang, 0, 6.3);
+      }, dark(cloth, 0.26), {
+        axis: [wrist[0] - shW * 0.12, 0, wrist[0] + shW * 0.12, 0], light: -1,
+        baseHex: cloth, deep: 0.45, lineW: 1.6
+      });
       hand(wrist[0], wrist[1], ang, s * spec.handS * (far ? 0.9 : 1),
         far ? dark(skin, 0.12) : skin, P.hand);
     }
@@ -675,26 +738,81 @@
     function leg(far) {
       var a = far ? P.legF : P.legN, m = far ? -1 : 1;
       var sx = cx + m * hipW * 0.38;
-      var pts = chain(sx, hipY - bodyH * 0.012, [[a[0] * m, legLen * 0.52], [(a[0] + a[1]) * m, legLen * 0.44]]);
+      /* Штанина доходила рівно до підлоги й повністю ховала черевик —
+         з-під неї визирала сама підошва. Лишаємо під стопу 8% довжини. */
+      var pts = chain(sx, hipY - bodyH * 0.012, [[a[0] * m, legLen * 0.52], [(a[0] + a[1]) * m, legLen * 0.40]]);
       var base = far ? dark(pant, 0.14) : pant;
-      volume(g, function (c) { limbPath(c, pts, hipW * 0.46, hipW * 0.26); },
+      volume(g, function (c) { limbPath(c, pts, hipW * 0.50, hipW * 0.28); },
         base, {
         axis: [sx - hipW * 0.4, 0, sx + hipW * 0.4, 0], light: -1,
         baseHex: pant, deep: far ? 0.42 : 0.6, lineW: 2, rim: far ? 0.42 : 0.30,
-        detail: function (c) { folds(c, sx, hipY, pts[2][1], hipW * 0.5, 9, 0.22); }
+        detail: function (c) {
+          folds(c, sx, hipY, pts[2][1], hipW * 0.5, 9, 0.22);
+          /* Дві однакові темні штанини зливались в одну плиту. Тінь із
+             внутрішнього боку розділяє ноги навіть у пітьмі. */
+          var ig = c.createLinearGradient(sx - m * hipW * 0.55, 0, sx + m * hipW * 0.18, 0);
+          ig.addColorStop(0, 'rgba(0,0,0,0.44)');
+          ig.addColorStop(1, 'rgba(0,0,0,0)');
+          c.fillStyle = ig; c.fillRect(0, 0, W, H);
+          // стрілка
+          c.strokeStyle = 'rgba(255,245,225,0.09)'; c.lineWidth = 2.4 * s; c.lineCap = 'round';
+          c.beginPath();
+          c.moveTo(pts[0][0], pts[0][1] + legLen * 0.10);
+          c.quadraticCurveTo(pts[1][0], pts[1][1], pts[2][0], pts[2][1] - legLen * 0.05);
+          c.stroke();
+          // коліно
+          c.strokeStyle = 'rgba(0,0,0,0.20)'; c.lineWidth = 2.2 * s;
+          c.beginPath();
+          c.moveTo(pts[1][0] - hipW * 0.15, pts[1][1] - 4 * s);
+          c.quadraticCurveTo(pts[1][0], pts[1][1] + 4 * s, pts[1][0] + hipW * 0.15, pts[1][1] - 4 * s);
+          c.stroke();
+          // холоша
+          c.strokeStyle = 'rgba(0,0,0,0.30)'; c.lineWidth = 3 * s;
+          c.beginPath();
+          c.moveTo(pts[2][0] - hipW * 0.17, pts[2][1] - 9 * s);
+          c.lineTo(pts[2][0] + hipW * 0.17, pts[2][1] - 11 * s);
+          c.stroke();
+        }
       });
       var f = pts[2];
+      /* Черевик: халява, підйом, окрема підошва. Був пласкою темною
+         плямою, через яку фігура ніби не стояла на підлозі. */
       volume(g, function (c) {
         c.beginPath();
-        c.moveTo(f[0] - 20 * s, f[1] + 2 * s);
-        c.quadraticCurveTo(f[0] - 22 * s, f[1] + 14 * s, f[0] - 8 * s, f[1] + 15 * s);
-        c.lineTo(f[0] + m * 26 * s, f[1] + 15 * s);
-        c.quadraticCurveTo(f[0] + m * 30 * s, f[1] + 4 * s, f[0] + 14 * s, f[1] - 2 * s);
+        c.moveTo(f[0] - 22 * s, f[1] - 4 * s);
+        c.quadraticCurveTo(f[0] - 27 * s, f[1] + 16 * s, f[0] - 15 * s, f[1] + 22 * s);
+        c.lineTo(f[0] + m * 34 * s, f[1] + 22 * s);
+        c.quadraticCurveTo(f[0] + m * 43 * s, f[1] + 12 * s, f[0] + m * 25 * s, f[1] - 2 * s);
+        c.quadraticCurveTo(f[0] + m * 7 * s, f[1] - 12 * s, f[0] - 22 * s, f[1] - 4 * s);
         c.closePath();
-      }, far ? '#0b0b10' : '#17171d', {
-        axis: [0, f[1] + 16 * s, 0, f[1] - 4 * s], light: -1,
-        baseHex: '#2a2a33', deep: 0.5, lineW: 1.8
+      }, far ? '#1d1d26' : '#2b2b36', {
+        axis: [0, f[1] + 22 * s, 0, f[1] - 12 * s], light: -1,
+        baseHex: '#3a3a46', deep: 0.5, lineW: 1.8,
+        detail: function (c) {
+          c.strokeStyle = 'rgba(0,0,0,0.45)'; c.lineWidth = 2.2 * s;
+          c.beginPath();                                   // шов підйому
+          c.moveTo(f[0] + m * 2 * s, f[1] - 10 * s);
+          c.quadraticCurveTo(f[0] + m * 10 * s, f[1] + 3 * s, f[0] + m * 30 * s, f[1] + 5 * s);
+          c.stroke();
+          c.strokeStyle = 'rgba(255,245,225,0.10)'; c.lineWidth = 2.6 * s;
+          c.beginPath();                                   // полиск на носку
+          c.moveTo(f[0] + m * 14 * s, f[1] + 3 * s);
+          c.quadraticCurveTo(f[0] + m * 30 * s, f[1] + 6 * s, f[0] + m * 33 * s, f[1] + 14 * s);
+          c.stroke();
+        }
       });
+      volume(g, function (c) {                             // підошва
+        c.beginPath();
+        c.moveTo(f[0] - 24 * s, f[1] + 18 * s);
+        c.lineTo(f[0] + m * 38 * s, f[1] + 18 * s);
+        c.lineTo(f[0] + m * 35 * s, f[1] + 28 * s);
+        c.lineTo(f[0] - 19 * s, f[1] + 28 * s);
+        c.closePath();
+      }, far ? '#2e2e3a' : '#45454f', {
+        axis: [0, f[1] + 29 * s, 0, f[1] + 17 * s], light: -1,
+        baseHex: '#565665', deep: 0.35, lineW: 1.4
+      });
+      ao(g, f[0] + m * 5 * s, f[1] + 29 * s, 40 * s, 10 * s, 0.55);
     }
 
     arm(true); leg(true);
@@ -722,6 +840,33 @@
       detail: function (c) {
         folds(c, cx, shY + tH * 0.15, hipY, chestW * 1.4, 16, 0.18);
         ao(c, cx, shY + tH * 0.06, chestW * 0.9, tH * 0.10, 0.35);
+        /* Тулуб був рівною плитою. Тінь під грудьми, полиск на животі
+           й планка з ґудзиками дають йому об'єм навіть на відстані. */
+        ao(c, cx, shY + tH * 0.30, chestW * 0.78, tH * 0.20, 0.20);
+        var cg = c.createRadialGradient(cx, shY + tH * 0.55, 2, cx, shY + tH * 0.55, chestW * 1.05);
+        cg.addColorStop(0, 'rgba(255,242,218,0.08)');
+        cg.addColorStop(1, 'rgba(255,242,218,0)');
+        c.fillStyle = cg; c.fillRect(0, 0, W, H);
+        c.strokeStyle = 'rgba(0,0,0,0.26)'; c.lineWidth = 2.2 * s; c.lineCap = 'round';
+        c.beginPath();
+        c.moveTo(cx - chestW * 0.07, shY + tH * 0.08);
+        c.lineTo(cx - chestW * 0.02, hipY - tH * 0.05);
+        c.stroke();
+        for (var bi = 0; bi < 4; bi++) {
+          c.fillStyle = 'rgba(0,0,0,0.32)';
+          c.beginPath();
+          c.arc(cx - chestW * 0.05, shY + tH * (0.20 + bi * 0.19), 3.4 * s, 0, 6.3);
+          c.fill();
+        }
+        // пройма рукава
+        [-1, 1].forEach(function (sd) {
+          c.strokeStyle = 'rgba(0,0,0,0.22)'; c.lineWidth = 2.4 * s;
+          c.beginPath();
+          c.moveTo(cx + sd * shW * 0.40, shY + tH * 0.02);
+          c.quadraticCurveTo(cx + sd * shW * 0.28, shY + tH * 0.16,
+            cx + sd * shW * 0.33, shY + tH * 0.30);
+          c.stroke();
+        });
         var bg = c.createLinearGradient(0, hipY, 0, shY);
         bg.addColorStop(0, 'rgba(255,240,215,0.12)');
         bg.addColorStop(0.45, 'rgba(0,0,0,0)');
@@ -751,6 +896,26 @@
         baseHex: skin, deep: 0.55, lineW: 1.8
       });
       ao(g, cx, neckY - headR * 0.25, headR * 0.7, headR * 0.35, 0.55);
+    })();
+
+    /* комір — малюється ПІСЛЯ шиї, інакше вона його перекриває.
+       Без нього голова просто висіла над плечима. */
+    (function () {
+      var cw = headR * 0.74, cd = bodyH * 0.052;
+      volume(g, function (c) {
+        c.beginPath();
+        c.moveTo(cx - cw, shY - bodyH * 0.006);
+        c.quadraticCurveTo(cx - cw * 0.52, shY + cd * 0.30, cx - cw * 0.20, shY + cd);
+        c.lineTo(cx, shY + cd * 0.42);
+        c.lineTo(cx + cw * 0.20, shY + cd);
+        c.quadraticCurveTo(cx + cw * 0.52, shY + cd * 0.30, cx + cw, shY - bodyH * 0.006);
+        c.quadraticCurveTo(cx, shY - bodyH * 0.034, cx - cw, shY - bodyH * 0.006);
+        c.closePath();
+      }, lite(cloth, 0.07), {
+        axis: [cx - cw, 0, cx + cw, 0], light: -1,
+        baseHex: cloth, deep: 0.42, lineW: 2
+      });
+      ao(g, cx, shY + cd * 0.35, cw * 0.55, cd * 0.55, 0.42);
     })();
 
     /* голова */
