@@ -424,6 +424,8 @@
     M.lockSide = new T.MeshLambertMaterial({ color: 0x33463f });
     M.lockTop = new T.MeshLambertMaterial({ color: 0x28332e });
     M.radi = new T.MeshLambertMaterial({ color: 0x8e948a });
+    /* ніч за шибкою: світиться сама, бо світло крізь неї не рахується */
+    M.nightGlass = new T.MeshBasicMaterial({ color: 0x1b2739 });
     M.glass = new T.MeshLambertMaterial({ color: 0x9fd8e8, transparent: true, opacity: 0.12 });
     M.frame = new T.MeshLambertMaterial({ color: 0x2f3134 });
     M.screen = new T.MeshBasicMaterial({ color: 0x0b1a0d });
@@ -708,8 +710,33 @@
     wall(g, X0, Z0, VX0, Z0, 3.0, 0.3);
     wall(g, VX1, Z0, X1, Z0, 3.0, 0.3);
     wall(g, X0, Z1, X1, Z1, 3.0, 0.3);
-    wall(g, X0, Z0, X0, Z1, 3.0, 0.3);
-    wall(g, X1, Z0, X1, Z1, 3.0, 0.3);
+    /* Бічні коридори були двома глухими кишками. Тепер уздовж них шість
+       вікон, рівно над батареями: у кадрі з'являється ритм, а той, хто
+       йде повз, на мить стає силуетом. Шибки самосвітні (MeshBasic):
+       стіни в цій сцені тіней не кидають, тож будь-яка лампа «надворі»
+       протекла б крізь них усередину школи. */
+    [X0, X1].forEach(function (wx) {
+      var WW = 1.50, WY0 = 0.95, WY1 = 2.40, i;
+      var winZ = [];
+      for (i = 0; i < 6; i++) winZ.push(-4.0 + i * 2.2);
+      var edges = [Z0];
+      winZ.forEach(function (z) { edges.push(z - WW / 2, z + WW / 2); });
+      edges.push(Z1);
+      for (i = 0; i < edges.length; i += 2) wall(g, wx, edges[i], wx, edges[i + 1], 3.0, 0.3);
+      winZ.forEach(function (z) {
+        g.add(box(0.30, WY0, WW, M.wallLow, wx, WY0 / 2, z));               // під вікном
+        g.add(box(0.30, 3.0 - WY1, WW, M.wallUp, wx, (WY1 + 3.0) / 2, z));  // над вікном
+        g.add(box(0.42, 0.055, WW + 0.14, M.wallUp, wx, WY0 + 0.028, z));   // підвіконня
+        g.add(box(0.06, WY1 - WY0, WW, M.nightGlass, wx, (WY0 + WY1) / 2, z));
+        // рама з хрестовиною
+        g.add(box(0.12, 0.07, WW, M.frame, wx, WY0 + 0.04, z));
+        g.add(box(0.12, 0.07, WW, M.frame, wx, WY1 - 0.04, z));
+        g.add(box(0.12, WY1 - WY0, 0.07, M.frame, wx, (WY0 + WY1) / 2, z - WW / 2 + 0.04));
+        g.add(box(0.12, WY1 - WY0, 0.07, M.frame, wx, (WY0 + WY1) / 2, z + WW / 2 - 0.04));
+        g.add(box(0.12, WY1 - WY0, 0.055, M.frame, wx, (WY0 + WY1) / 2, z));
+        g.add(box(0.12, 0.055, WW, M.frame, wx, WY0 + (WY1 - WY0) * 0.62, z));
+      });
+    });
 
     /* --- тамбур входу --- */
     wall(g, VX0, VZ, VX0, Z0, 3.0, 0.25);
